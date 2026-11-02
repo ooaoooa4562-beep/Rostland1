@@ -98,7 +98,7 @@ class RostInterpreter:
                 continue
 
             if line.startswith("action ") and line.endswith("{"):
-                match = re.fullmatch(r"([A-Za-z_]\w*)\s*\((.*?)\)\s*\{", line)
+                match = re.fullmatch(r"action\s+([A-Za-z_]\w*)\s*\((.*?)\)\s*\{", line)
                 if not match:
                     self.error("Use: action name(parameter1, parameter2) {", number)
                 name, raw = match.groups()
