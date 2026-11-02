@@ -1,116 +1,122 @@
-# RostLang 0.3.0 Alpha
+# RostLang 0.4.0 Alpha
 
-RostLang is an experimental general-purpose programming language with original command-style syntax. Its first interpreter is written in Python. Source files use the `.rost` extension.
+RostLang is an experimental general-purpose programming language with a hybrid syntax: familiar Python-style statements combined with RostLang commands. The interpreter is written in Python. Source files use the `.rost` extension.
 
 ## Requirements
+
 - Python 3.10+
 - No third-party packages
 
 ## Run
+
 ```bash
 python main.py examples/hello.rost
 python main.py examples/features.rost
-python main.py examples/guess_number.rost
 python main.py --version
-```
-
-## Language guide
-
-### Modules
-Use another `.rost` file relative to the current program. A module is loaded only once and shares the interpreter's variables and actions.
-```text
-use "math_tools.rost"
-say double(21)
-```
-
-### Output, variables and input
-```text
-say "Hello!"
-make name = "Rostik"
-make points = 10
-change points = points + 5
-ask nickname = "Your nickname: "
-say nickname
-```
-
-### Conditions
-```text
-when points >= 10 {
-    say "Level up!"
-} otherwise {
-    say "Keep trying!"
-}
-```
-Comparisons: == != < <= > >= in not in. Logic: and, or, not. Values: true, false, nothing.
-
-### Loops
-```text
-repeat 3 {
-    say "Again"
-}
-make i = 0
-while i < 3 {
-    say i
-    change i = i + 1
-}
-``
-Use `stop` to exit a loop and `skip` to continue with its next iteration.
-
-### Functions
-```text
-action add(a, b) {
-    return a + b
-}
-make total = add(10, 20)
-say total
-``
-Use `call function_name(args)` when calling a function as a statement.
-
-### Collections
-Lists and dictionaries are supported in expressions:
-```text
-make items = ["map", "key"]
-call append(items, "compass")
-say items[0]
-make profile = {"name": "Rostik", "level": 4}
-say profile["name"]
-``
-
-### Built-ins
-- `random()`, `random_int(min, max)`
-- `length(value)`, `text(value)`, `number(value)`
-- `abs`, `min`, `max`, `sum`, `round`
-- `floor`, `ceil`, `sqrt`
-- `append(list, value)`, `pop(list[, index])`
-
-Comments are full lines beginning with `#`.
-
-## Tests
-```bash
 python -m unittest discover -s tests -v
 ```
 
-## Project structure
-```text
-Rostland1/
-├── main.py
-├── rostlang/
-├── examples/
-└── tests/
+## Hybrid syntax
+
+Both RostLang commands and selected Python-style forms are supported.
+
+### Variables and output
+
+```rost
+make name = "Rostik"
+say name
+
+let score = 100
+print(score)
+
+score = score + 25
+print("New score: " + str(score))
 ```
 
-## Alpha limitations
-This is an early interpreter. Blocks use braces and statements are line-based. Function arguments are positional. There is not yet a package manager, class system, async runtime, general file API or native compiler. Module files can be loaded with `use`. Expressions are parsed with Python's AST but only a restricted set of nodes is evaluated; arbitrary Python code is not executed.
+- `make` and `let` create variables.
+- `change name = value` updates an existing variable.
+- `name = value` creates or updates a variable.
+- `say expression` and `print(expression)` output values.
+
+### Conditions
+
+```rost
+if score >= 100 {
+    print("Level up!")
+} else {
+    say "Keep going!"
+}
+```
+
+The original `when ... { } otherwise { }` syntax remains supported.
+
+### Loops
+
+```rost
+repeat 3 {
+    print("Again")
+}
+
+let index = 0
+while index < 3 {
+    print(index)
+    index = index + 1
+}
+```
+
+Use `stop` to exit a loop and `skip` to continue with its next iteration.
+
+### Functions
+
+```rost
+def double(value) {
+    return value * 2
+}
+
+print(double(21))
+```
+
+The original `action name(args) { }` syntax remains supported.
+
+### Collections and modules
+
+```rost
+let items = ["map", "key"]
+call append(items, "compass")
+print(items[0])
+
+use "math_tools.rost"
+print(double(21))
+```
+
+Lists, tuples, dictionaries and indexing are supported. Modules are loaded once, relative to the importing file.
+
+## Built-ins
+
+Current built-ins include `random`, `random_int`, `length`, `text`, `number`, `abs`, `min`, `max`, `sum`, `round`, `floor`, `ceil`, `sqrt`, `append`, `pop`, `str`, `int`, `float`, `bool`, `input` and `range`.
+
+## 0.4.0 architecture
+
+- `rostlang/lexer.py` tokenizes names, literals, operators, punctuation, comments and line boundaries.
+- `rostlang/parser.py` parses brace-delimited blocks and builds the interpreter's statement representation.
+- `rostlang/interpreter.py` evaluates expressions and executes statements.
+
+This is an incremental parser foundation, not yet a complete Python grammar. Blocks use braces, statements are line-based, and expressions are currently parsed through a restricted Python AST evaluator.
+
+## Current limitations
+
+RostLang is still experimental. It does not yet provide classes, inheritance, decorators, generators, async/await, a package manager, a general file API, networking APIs, GUI/game frameworks or a native compiler. The lexer and parser are an early foundation; the language does not execute arbitrary Python code or automatically support Python packages.
 
 ## Roadmap
-- [x] Variables, input, output and arithmetic
-- [x] Conditions and loops
-- [x] Functions and return
-- [x] Lists and dictionaries
-- [x] Random and math helpers
-- [x] Unit tests and sample programs
-- [ ] Dedicated lexer and parser
-- [ ] Modules and package manager
-- [ ] Classes and object-oriented features
-- [ ] File APIs, debugger and editor support
-- [ ] Bytecode compiler
+
+- [x] Variables, output, input and expressions
+- [x] Conditions, loops and functions
+- [x] Collections and module imports
+- [x] Initial lexer and block parser
+- [x] Hybrid Python-style statements
+- [ ] Full expression parser and indentation-based blocks
+- [ ] Local scopes, keyword/default arguments and classes
+- [ ] File APIs, exceptions and package manager
+- [ ] Networking, databases and application libraries
+- [ ] Graphics, GUI and game development libraries
+- [ ] Bytecode compiler and stable 1.0 release
