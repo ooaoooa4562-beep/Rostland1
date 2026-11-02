@@ -1,4 +1,4 @@
-# RostLang 0.2.0 Alpha
+# RostLang 0.3.0 Alpha
 
 RostLang is an experimental general-purpose programming language with original command-style syntax. Its first interpreter is written in Python. Source files use the `.rost` extension.
 
@@ -15,6 +15,13 @@ python main.py --version
 ```
 
 ## Language guide
+
+### Modules
+Use another `.rost` file relative to the current program. A module is loaded only once and shares the interpreter's variables and actions.
+```text
+use "math_tools.rost"
+say double(21)
+```
 
 ### Output, variables and input
 ```text
@@ -93,7 +100,7 @@ Rostland1/
 ```
 
 ## Alpha limitations
-This is an early interpreter. Blocks use braces and statements are line-based. Function arguments are positional. There is no module manager, class system, async runtime, file API or native compiler yet. Expressions are parsed with Python's AST but only a restricted set of nodes is evaluated; arbitrary Python code is not executed.
+This is an early interpreter. Blocks use braces and statements are line-based. Function arguments are positional. There is not yet a package manager, class system, async runtime, general file API or native compiler. Module files can be loaded with `use`. Expressions are parsed with Python's AST but only a restricted set of nodes is evaluated; arbitrary Python code is not executed.
 
 ## Roadmap
 - [x] Variables, input, output and arithmetic
