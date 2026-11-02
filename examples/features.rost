@@ -1,0 +1,34 @@
+# Conditions, loops, functions, lists and built-ins
+make player = "Rostik"
+make health = 85
+
+when health > 50 {
+    say "Ready for adventure!"
+} otherwise {
+    say "Find a health potion."
+}
+
+repeat 3 {
+    say "Training..."
+}
+
+action multiply(a, b) {
+    return a * b
+}
+
+make result = multiply(6, 7)
+say "6 x 7 = " + text(result)
+
+make bag = ["sword", "shield"]
+call append(bag, "potion")
+say bag
+say "Items: " + text(length(bag))
+
+make lucky = random_int(1, 10)
+say "Lucky number: " + text(lucky)
+
+make counter = 0
+while counter < 3 {
+    say counter
+    change counter = counter + 1
+}
