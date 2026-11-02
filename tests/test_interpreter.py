@@ -59,7 +59,7 @@ print(answer)'''
         output = io.StringIO()
         with patch.object(builtins, "input", return_value="Rostik"):
             with contextlib.redirect_stdout(output):
-                RostInterpreter().run('name = input("Name: ")\\nprint(name)')
+                RostInterpreter().run('name = input("Name: ")\nprint(name)')
         self.assertEqual(output.getvalue().strip(), "Rostik")
 
     def test_module_import(self):
