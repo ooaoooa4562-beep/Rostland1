@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0-alpha
+- Added an initial tokenizer in `rostlang/lexer.py`
+- Added a separate brace-block parser in `rostlang/parser.py`
+- Added hybrid syntax: `let`, `print`, `if/else`, `def` and ordinary assignment
+- Added common conversion, input and range built-ins
+- Routed module loading through the new parser
+- Added tests for hybrid syntax and lexer errors
+- Updated project documentation and version
+
 ## 0.3.0-alpha
 - Added relative .rost module imports with the use command
 - Modules are loaded once and share variables and actions
