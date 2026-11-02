@@ -1,0 +1,8 @@
+# Reusable math actions for other RostLang programs
+action double(value) {
+    return value * 2
+}
+
+action square(value) {
+    return value * value
+}
