@@ -3,6 +3,7 @@ import math
 import operator
 import random
 import re
+import shutil
 from pathlib import Path
 
 from .errors import RostLangError
@@ -63,6 +64,7 @@ class RostInterpreter:
             "read_text": self.read_text, "write_text": self.write_text,
             "exists": lambda path: Path(str(path)).exists(),
             "list_dir": lambda path=".": [p.name for p in Path(str(path)).iterdir()],
+            "build_site": self.build_site,
         }
 
     def run(self, source, filename="<memory>"):
@@ -260,6 +262,8 @@ class RostInterpreter:
         elif re.match(r"^[A-Za-z_]\w*\s*=", line):
             name = line.split("=", 1)[0].strip()
             self.assign(line, name not in self.variables)
+        elif re.fullmatch(r"[A-Za-z_]\w*\s*\(.*\)", line):
+            self.evaluate(line)
         else:
             self.error(f"Unknown command: {line.split()[0]}")
 
@@ -405,6 +409,23 @@ class RostInterpreter:
                 if value is _MISSING: self.variables.pop(p, None)
                 else: self.variables[p] = value
         return None
+
+    @staticmethod
+    def build_site(html_path, css_path, output_dir="site"):
+        """Copy a static HTML/CSS site into a publishable output directory."""
+        html_source = Path(str(html_path))
+        css_source = Path(str(css_path))
+        destination = Path(str(output_dir))
+        if not html_source.is_file():
+            raise RostLangError(f"build_site(): HTML file not found: {html_source}")
+        if not css_source.is_file():
+            raise RostLangError(f"build_site(): CSS file not found: {css_source}")
+        if html_source.resolve() == css_source.resolve():
+            raise RostLangError("build_site(): HTML and CSS paths must be different")
+        destination.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(html_source, destination / "index.html")
+        shutil.copy2(css_source, destination / "style.css")
+        return str(destination)
 
     @staticmethod
     def read_text(path):
