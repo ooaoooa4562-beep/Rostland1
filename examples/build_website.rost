@@ -1,0 +1,3 @@
+# Build the sample HTML + CSS website into ./site
+build_site("examples/web/index.html", "examples/web/style.css", "site")
+say "Website built in ./site"
