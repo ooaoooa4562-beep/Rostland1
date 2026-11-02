@@ -1,4 +1,4 @@
-# RostLang 0.5.0 Alpha
+# RostLang 0.6.0 Alpha
 
 RostLang is an experimental general-purpose language with a hybrid syntax. It combines original commands such as `say` and `make` with selected Python-like syntax. The interpreter is implemented in Python and source files use `.rost`.
 
@@ -9,6 +9,7 @@ Requires Python 3.10+ and no third-party packages.
 ```bash
 python main.py examples/hello.rost
 python main.py examples/v05_demo.rost
+python main.py examples/build_website.rost
 python main.py --version
 python -m unittest discover -s tests -v
 ```
@@ -81,6 +82,25 @@ try {
 ```
 
 The current handler catches RostLang errors and common arithmetic, conversion, indexing and key errors.
+
+## Build a static website
+
+RostLang 0.6 adds an initial HTML/CSS website build helper. Keep your site source files in a folder, then call `build_site` from a `.rost` script:
+
+```rost
+build_site("examples/web/index.html", "examples/web/style.css", "site")
+say "Website built in ./site"
+```
+
+Run it from the repository root:
+
+```bash
+python main.py examples/build_website.rost
+```
+
+The helper copies the HTML to `site/index.html` and CSS to `site/style.css`. Your HTML should link to the stylesheet with `<link rel="stylesheet" href="style.css">`. Open `site/index.html` in a browser to preview it. The generated `site/` directory is a static website that can be published using a static host such as GitHub Pages.
+
+**Current limitation:** this first web feature only packages HTML and CSS files. RostLang does not yet run inside the browser or handle browser click events, and this helper does not create a server or database. Browser interactivity is a future feature.
 
 ## Files
 
