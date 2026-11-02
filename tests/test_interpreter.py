@@ -33,6 +33,35 @@ class RostLangTests(unittest.TestCase):
     def test_while(self):
         self.assertEqual(self.run_code('make i = 0\nwhile i < 3 {\n say i\n change i = i + 1\n}'), ["0", "1", "2"])
 
+    def test_hybrid_python_style_syntax(self):
+        code = '''let name = "RostLang"
+score = 20
+if score >= 10 {
+    print("Welcome, " + name)
+} else {
+    print("Try again")
+}
+def double(value) {
+    return value * 2
+}
+answer = double(score)
+print(answer)'''
+        self.assertEqual(self.run_code(code), ["Welcome, RostLang", "40"])
+
+    def test_lexer_rejects_unexpected_character(self):
+        from rostlang.errors import RostLangError
+        with self.assertRaises(RostLangError):
+            RostInterpreter().run("say @")
+
+    def test_python_style_input_builtin(self):
+        import builtins
+        from unittest.mock import patch
+        output = io.StringIO()
+        with patch.object(builtins, "input", return_value="Rostik"):
+            with contextlib.redirect_stdout(output):
+                RostInterpreter().run('name = input("Name: ")\\nprint(name)')
+        self.assertEqual(output.getvalue().strip(), "Rostik")
+
     def test_module_import(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
