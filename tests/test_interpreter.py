@@ -62,6 +62,36 @@ print(answer)'''
                 RostInterpreter().run('name = input("Name: ")\nprint(name)')
         self.assertEqual(output.getvalue().strip(), "Rostik")
 
+    def test_for_loop(self):
+        self.assertEqual(self.run_code("for item in [1, 2, 3] {\\n print(item)\\n}"), ["1", "2", "3"])
+
+    def test_class_instance_and_method(self):
+        code = '''class Player {
+    def __init__(self, name) {
+        self.name = name
+    }
+    def greet(self) {
+        return "Hello " + self.name
+    }
+}
+player = Player("Rostik")
+print(player.greet())'''
+        self.assertEqual(self.run_code(code), ["Hello Rostik"])
+
+    def test_try_except(self):
+        code = '''try {
+    value = 10 / 0
+} except problem {
+    print("Caught: " + problem)
+}'''
+        self.assertEqual(self.run_code(code), ["Caught: <memory>:2: Expression error: division by zero"])
+
+    def test_file_helpers(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = str(Path(folder) / "note.txt")
+            code = 'write_text("' + path + '", "hello")\\nprint(read_text("' + path + '"))'
+            self.assertEqual(self.run_code(code), ["hello"])
+
     def test_module_import(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
