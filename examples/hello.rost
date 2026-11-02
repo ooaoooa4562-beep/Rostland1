@@ -1,0 +1,6 @@
+# First RostLang 0.2 program
+say "Welcome to RostLang 0.2!"
+make player = "Rostik"
+make level = 3
+say "Player: " + player
+say "Level: " + text(level)
