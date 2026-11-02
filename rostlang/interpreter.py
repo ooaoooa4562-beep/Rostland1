@@ -3,6 +3,7 @@ import math
 import operator
 import random
 import re
+from pathlib import Path
 
 from .errors import RostLangError
 
@@ -40,6 +41,8 @@ class RostInterpreter:
         self.variables = {}
         self.functions = {}
         self.depth = 0
+        self.loaded_modules = set()
+        self.loading_modules = set()
         self.builtins = {
             "random": lambda: random.random(),
             "random_int": lambda a, b: random.randint(int(a), int(b)),
@@ -51,6 +54,8 @@ class RostInterpreter:
 
     def run(self, source, filename="<memory>"):
         self.filename = filename
+        self.loaded_modules = set()
+        self.loading_modules = set()
         self.lines = source.splitlines()
         self.index = 0
         program = self.parse_block(top=True)
@@ -179,8 +184,37 @@ class RostInterpreter:
             raise ReturnSignal(self.evaluate(line[7:].strip()))
         elif line.startswith("call "):
             self.evaluate(line[5:].strip())
+        elif line.startswith("use "):
+            self.load_module(line[4:].strip())
         else:
             self.error(f"Unknown command: {line.split()[0]}")
+
+    def load_module(self, expression):
+        try:
+            module_name = ast.literal_eval(expression)
+        except (ValueError, SyntaxError):
+            self.error('use expects a quoted .rost path')
+        if not isinstance(module_name, str) or not module_name.endswith('.rost'):
+            self.error('use expects a quoted .rost path')
+        base = Path(self.filename).parent if self.filename != '<memory>' else Path.cwd()
+        module_path = (base / module_name).resolve()
+        if module_path in self.loaded_modules:
+            return
+        if module_path in self.loading_modules:
+            self.error('Circular module import: ' + module_name)
+        if not module_path.is_file():
+            self.error('Module not found: ' + module_name)
+        self.loading_modules.add(module_path)
+        saved = (self.filename, self.lines, self.index, getattr(self, 'line', 1))
+        try:
+            self.filename = str(module_path)
+            self.lines = module_path.read_text(encoding='utf-8').splitlines()
+            self.index = 0
+            self.execute(self.parse_block(top=True))
+            self.loaded_modules.add(module_path)
+        finally:
+            self.filename, self.lines, self.index, self.line = saved
+            self.loading_modules.discard(module_path)
 
     def assign(self, text, create):
         if "=" not in text:
