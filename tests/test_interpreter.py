@@ -81,7 +81,8 @@ print(player.greet())'''
     def test_try_except(self):
         code = '''try {
     value = 10 / 0
-} except problem {
+}
+except problem {
     print("Caught: " + problem)
 }'''
         self.assertEqual(self.run_code(code), ["Caught: <memory>:2: Expression error: division by zero"])
