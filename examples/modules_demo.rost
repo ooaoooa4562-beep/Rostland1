@@ -1,0 +1,5 @@
+# Run with: python main.py examples/modules_demo.rost
+use "math_tools.rost"
+
+say "Double 21 = " + text(double(21))
+say "Square 7 = " + text(square(7))
