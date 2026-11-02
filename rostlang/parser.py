@@ -1,0 +1,75 @@
+"""Block parser for the brace-based hybrid RostLang syntax."""
+import re
+
+from .lexer import Lexer
+from .errors import RostLangError
+
+
+class Parser:
+    def __init__(self, source, filename="<memory>"):
+        self.source = source
+        self.filename = filename
+        self.lines = source.splitlines()
+        self.index = 0
+
+    def parse(self):
+        try:
+            Lexer(self.source, self.filename).tokenize()
+        except SyntaxError as exc:
+            raise RostLangError(str(exc)) from exc
+        return self.parse_block(top=True)
+
+    def error(self, message, line):
+        raise RostLangError(f"{self.filename}:{line}: {message}")
+
+    def parse_block(self, top=False):
+        result = []
+        while self.index < len(self.lines):
+            number = self.index + 1
+            line = self.lines[self.index].strip()
+            self.index += 1
+            if not line or line.startswith("#"):
+                continue
+            if line == "} otherwise {" or line == "} else {":
+                if top:
+                    self.error("Unexpected '}'", number)
+                self.lines.insert(self.index, "else {")
+                return result
+            if line == "}":
+                if top:
+                    self.error("Unexpected '}'", number)
+                return result
+
+            if (line.startswith(("when ", "if ")) and line.endswith("{")):
+                condition = line.split(" ", 1)[1][:-1].strip()
+                yes = self.parse_block()
+                no = []
+                if self.index < len(self.lines) and self.lines[self.index].strip() in ("otherwise {", "else {"):
+                    self.index += 1
+                    no = self.parse_block()
+                result.append(("when", condition, yes, no, number))
+                continue
+
+            if line.startswith(("repeat ", "while ")) and line.endswith("{"):
+                keyword = "repeat" if line.startswith("repeat ") else "while"
+                result.append((keyword, line[len(keyword):-1].strip(), self.parse_block(), number))
+                continue
+
+            if (line.startswith("action ") or line.startswith("def ")) and line.endswith("{"):
+                match = re.fullmatch(r"(?:action|def)\\s+([A-Za-z_]\\w*)\\s*\\((.*?)\\)\\s*\\{", line)
+                if not match:
+                    self.error("Use: def name(parameter1, parameter2) {", number)
+                name, raw = match.groups()
+                params = [p.strip() for p in raw.split(",") if p.strip()]
+                if any(not re.fullmatch(r"[A-Za-z_]\\w*", p) for p in params) or len(params) != len(set(params)):
+                    self.error("Invalid or duplicate function parameter", number)
+                result.append(("action", name, params, self.parse_block(), number))
+                continue
+
+            if line.startswith(("otherwise", "else")):
+                self.error("'else' must follow an 'if' block", number)
+            result.append(("line", line, number))
+
+        if not top:
+            self.error("Missing closing '}'", len(self.lines) or 1)
+        return result
