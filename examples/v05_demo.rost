@@ -19,7 +19,8 @@ for score in [10, 20, 30] {
 
 try {
     result = 10 / 0
-} except problem {
+}
+except problem {
     print("Handled an error")
 }
 
