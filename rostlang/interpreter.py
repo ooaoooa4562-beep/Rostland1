@@ -214,15 +214,14 @@ class RostInterpreter:
         if not module_path.is_file():
             self.error('Module not found: ' + module_name)
         self.loading_modules.add(module_path)
-        saved = (self.filename, self.lines, self.index, getattr(self, 'line', 1))
+        previous_filename = self.filename
         try:
             self.filename = str(module_path)
-            self.lines = module_path.read_text(encoding='utf-8').splitlines()
-            self.index = 0
-            self.execute(self.parse_block(top=True))
+            source = module_path.read_text(encoding='utf-8')
+            self.execute(Parser(source, str(module_path)).parse())
             self.loaded_modules.add(module_path)
         finally:
-            self.filename, self.lines, self.index, self.line = saved
+            self.filename = previous_filename
             self.loading_modules.discard(module_path)
 
     def assign(self, text, create):
