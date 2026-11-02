@@ -1,0 +1,27 @@
+# RostLang 0.5.0: classes, loops, exceptions and files
+
+class Player {
+    def __init__(self, name) {
+        self.name = name
+    }
+
+    def greet(self) {
+        return "Hello, " + self.name
+    }
+}
+
+player = Player("Rostik")
+print(player.greet())
+
+for score in [10, 20, 30] {
+    print(score)
+}
+
+try {
+    result = 10 / 0
+} except problem {
+    print("Handled an error")
+}
+
+write_text("hello.txt", "Created by RostLang")
+print(read_text("hello.txt"))
