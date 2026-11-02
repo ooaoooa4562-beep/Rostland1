@@ -68,6 +68,12 @@ class RostInterpreter:
             self.index += 1
             if not line or line.startswith("#"):
                 continue
+            if line == "} otherwise {":
+                if top:
+                    self.error("Unexpected '}'", number)
+                # Accept the compact form: } otherwise { on one line.
+                self.lines.insert(self.index, "otherwise {")
+                return result
             if line == "}":
                 if top:
                     self.error("Unexpected '}'", number)
