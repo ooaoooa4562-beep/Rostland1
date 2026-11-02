@@ -250,6 +250,13 @@ class RostInterpreter:
             self.evaluate(line[5:].strip())
         elif line.startswith("use "):
             self.load_module(line[4:].strip())
+        elif re.match(r"^[A-Za-z_]\w*\.[A-Za-z_]\w*\s*=", line):
+            target, expr = line.split("=", 1)
+            object_name, attr = target.strip().split(".", 1)
+            obj = self.variables.get(object_name)
+            if not isinstance(obj, RostObject):
+                self.error("Attribute assignment expects an object")
+            obj.attributes[attr] = self.evaluate(expr.strip())
         elif re.match(r"^[A-Za-z_]\w*\s*=", line):
             name = line.split("=", 1)[0].strip()
             self.assign(line, name not in self.variables)
