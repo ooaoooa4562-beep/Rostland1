@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from .errors import RostLangError
+from .parser import Parser
 
 
 class ReturnSignal(Exception):
@@ -50,15 +51,15 @@ class RostInterpreter:
             "abs": abs, "min": min, "max": max, "sum": sum,
             "round": round, "floor": math.floor, "ceil": math.ceil,
             "sqrt": math.sqrt, "append": self.append, "pop": self.pop,
+            "str": str, "int": int, "float": float, "bool": bool,
+            "input": input, "range": range,
         }
 
     def run(self, source, filename="<memory>"):
         self.filename = filename
         self.loaded_modules = set()
         self.loading_modules = set()
-        self.lines = source.splitlines()
-        self.index = 0
-        program = self.parse_block(top=True)
+        program = Parser(source, filename).parse()
         self.execute(program)
 
     def error(self, message, line=None):
@@ -168,8 +169,13 @@ class RostInterpreter:
     def execute_line(self, line):
         if line.startswith("say "):
             print(self.stringify(self.evaluate(line[4:].strip())))
-        elif line.startswith("make "):
-            self.assign(line[5:].strip(), True)
+        elif line.startswith("print(") and line.endswith(")"):
+            value = self.evaluate(line[6:-1].strip())
+            print(self.stringify(value))
+        elif line.startswith("print "):
+            print(self.stringify(self.evaluate(line[6:].strip())))
+        elif line.startswith(("make ", "let ")):
+            self.assign(line.split(" ", 1)[1].strip(), True)
         elif line.startswith("change "):
             self.assign(line[7:].strip(), False)
         elif line.startswith("ask "):
@@ -186,6 +192,9 @@ class RostInterpreter:
             self.evaluate(line[5:].strip())
         elif line.startswith("use "):
             self.load_module(line[4:].strip())
+        elif re.match(r"^[A-Za-z_]\w*\s*=", line):
+            name = line.split("=", 1)[0].strip()
+            self.assign(line, name not in self.variables)
         else:
             self.error(f"Unknown command: {line.split()[0]}")
 
