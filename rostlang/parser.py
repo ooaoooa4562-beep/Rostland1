@@ -56,12 +56,12 @@ class Parser:
                 continue
 
             if (line.startswith("action ") or line.startswith("def ")) and line.endswith("{"):
-                match = re.fullmatch(r"(?:action|def)\\s+([A-Za-z_]\\w*)\\s*\\((.*?)\\)\\s*\\{", line)
+                match = re.fullmatch(r"(?:action|def)\s+([A-Za-z_]\w*)\s*\\((.*?)\\)\s*\\{", line)
                 if not match:
                     self.error("Use: def name(parameter1, parameter2) {", number)
                 name, raw = match.groups()
                 params = [p.strip() for p in raw.split(",") if p.strip()]
-                if any(not re.fullmatch(r"[A-Za-z_]\\w*", p) for p in params) or len(params) != len(set(params)):
+                if any(not re.fullmatch(r"[A-Za-z_]\w*", p) for p in params) or len(params) != len(set(params)):
                     self.error("Invalid or duplicate function parameter", number)
                 result.append(("action", name, params, self.parse_block(), number))
                 continue
