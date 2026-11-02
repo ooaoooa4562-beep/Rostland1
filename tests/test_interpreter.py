@@ -93,6 +93,20 @@ except problem {
             code = 'write_text("' + path + '", "hello")\nprint(read_text("' + path + '"))'
             self.assertEqual(self.run_code(code), ["hello"])
 
+    def test_build_site(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "index.html").write_text(
+                '<!doctype html><html><head><link rel="stylesheet" href="style.css"></head><body>Hello</body></html>',
+                encoding="utf-8",
+            )
+            (root / "style.css").write_text("body { color: red; }", encoding="utf-8")
+            output_dir = root / "dist"
+            code = 'build_site("' + str(root / "index.html") + '", "' + str(root / "style.css") + '", "' + str(output_dir) + '")'
+            self.run_code(code)
+            self.assertEqual((output_dir / "index.html").read_text(encoding="utf-8").find("Hello") >= 0, True)
+            self.assertEqual((output_dir / "style.css").read_text(encoding="utf-8"), "body { color: red; }")
+
     def test_module_import(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
