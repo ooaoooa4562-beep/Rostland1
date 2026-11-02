@@ -1,0 +1,21 @@
+# A small hybrid-syntax demo
+
+let username = "RostLang"
+let points = 3
+
+def add_points(current, extra) {
+    return current + extra
+}
+
+if points >= 3 {
+    print("Welcome, " + username)
+} else {
+    say "Not ready yet"
+}
+
+points = add_points(points, 7)
+print("Points: " + str(points))
+
+repeat 2 {
+    say "Building the future"
+}
