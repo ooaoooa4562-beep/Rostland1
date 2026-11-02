@@ -63,7 +63,7 @@ print(answer)'''
         self.assertEqual(output.getvalue().strip(), "Rostik")
 
     def test_for_loop(self):
-        self.assertEqual(self.run_code("for item in [1, 2, 3] {\\n print(item)\\n}"), ["1", "2", "3"])
+        self.assertEqual(self.run_code("for item in [1, 2, 3] {\n print(item)\n}"), ["1", "2", "3"])
 
     def test_class_instance_and_method(self):
         code = '''class Player {
@@ -89,7 +89,7 @@ print(player.greet())'''
     def test_file_helpers(self):
         with tempfile.TemporaryDirectory() as folder:
             path = str(Path(folder) / "note.txt")
-            code = 'write_text("' + path + '", "hello")\\nprint(read_text("' + path + '"))'
+            code = 'write_text("' + path + '", "hello")\nprint(read_text("' + path + '"))'
             self.assertEqual(self.run_code(code), ["hello"])
 
     def test_module_import(self):
