@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0-alpha
+- Added `build_site(html_path, css_path, output_dir)` to package HTML/CSS into a publishable static site folder
+- Added a responsive sample website in `examples/web/` and a `.rost` build script
+- Allowed standalone built-in function calls as expression statements
+- Added a test for website output and fixed the file-helper test path
+- Documented the current limits: browser-side RostLang events and server features are not implemented yet
+
 ## 0.5.0-alpha
 - Added `for item in iterable { }` loops
 - Added `try { } except name { }` error handling
