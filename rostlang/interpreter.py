@@ -9,6 +9,12 @@ from .errors import RostLangError
 from .parser import Parser
 
 
+class RostObject:
+    def __init__(self, class_name):
+        self.class_name = class_name
+        self.attributes = {}
+
+
 class ReturnSignal(Exception):
     def __init__(self, value):
         self.value = value
@@ -41,6 +47,7 @@ class RostInterpreter:
     def __init__(self):
         self.variables = {}
         self.functions = {}
+        self.classes = {}
         self.depth = 0
         self.loaded_modules = set()
         self.loading_modules = set()
@@ -53,6 +60,9 @@ class RostInterpreter:
             "sqrt": math.sqrt, "append": self.append, "pop": self.pop,
             "str": str, "int": int, "float": float, "bool": bool,
             "input": input, "range": range,
+            "read_text": self.read_text, "write_text": self.write_text,
+            "exists": lambda path: Path(str(path)).exists(),
+            "list_dir": lambda path=".": [p.name for p in Path(str(path)).iterdir()],
         }
 
     def run(self, source, filename="<memory>"):
@@ -161,6 +171,54 @@ class RostInterpreter:
                 if name in self.functions or name in self.builtins:
                     self.error(f"Function '{name}' already exists")
                 self.functions[name] = (params, body)
+            elif kind == "for":
+                _, name, expr, body, line = item
+                self.line = line
+                try:
+                    values = list(self.evaluate(expr))
+                except Exception as exc:
+                    self.error(f"for expects an iterable: {exc}")
+                if len(values) > 100000:
+                    self.error("for loop limited to 100000 items")
+                old_value = self.variables.get(name, _MISSING)
+                try:
+                    for value in values:
+                        self.variables[name] = value
+                        try:
+                            self.execute(body)
+                        except ContinueSignal:
+                            continue
+                        except BreakSignal:
+                            break
+                finally:
+                    if old_value is _MISSING: self.variables.pop(name, None)
+                    else: self.variables[name] = old_value
+            elif kind == "try":
+                _, body, error_name, handler, line = item
+                self.line = line
+                try:
+                    self.execute(body)
+                except (RostLangError, ArithmeticError, ValueError, TypeError, IndexError, KeyError) as exc:
+                    if not handler: raise
+                    old_value = self.variables.get(error_name, _MISSING)
+                    self.variables[error_name] = str(exc)
+                    try: self.execute(handler)
+                    finally:
+                        if old_value is _MISSING: self.variables.pop(error_name, None)
+                        else: self.variables[error_name] = old_value
+            elif kind == "class":
+                _, name, body, line = item
+                self.line = line
+                if name in self.classes or name in self.variables or name in self.functions:
+                    self.error(f"Name '{name}' already exists")
+                methods = {}
+                for statement in body:
+                    if statement[0] != "action":
+                        self.error("Class bodies currently support methods only")
+                    _, method_name, params, method_body, method_line = statement
+                    methods[method_name] = (params, method_body)
+                    self.functions[name + "." + method_name] = (params, method_body)
+                self.classes[name] = methods
             else:
                 _, line_text, line = item
                 self.line = line
@@ -287,6 +345,20 @@ class RostInterpreter:
             return True
         if isinstance(n, ast.Subscript):
             return self.node(n.value)[self.node(n.slice)]
+        if isinstance(n, ast.Attribute):
+            obj = self.node(n.value)
+            if isinstance(obj, RostObject):
+                if n.attr in obj.attributes: return obj.attributes[n.attr]
+                self.error(f"Unknown attribute: {n.attr}")
+            self.error("Attribute access is supported only on RostLang objects")
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute):
+            obj = self.node(n.func.value)
+            args = [self.node(x) for x in n.args]
+            if n.keywords: self.error("Named arguments are not supported yet")
+            if not isinstance(obj, RostObject): self.error("Method call expects a RostLang object")
+            key = obj.class_name + "." + n.func.attr
+            if key not in self.functions: self.error(f"Unknown method: {n.func.attr}")
+            return self.call_function(key, [obj] + args)
         if isinstance(n, ast.Call) and isinstance(n.func, ast.Name):
             name = n.func.id
             args = [self.node(x) for x in n.args]
@@ -294,6 +366,14 @@ class RostInterpreter:
                 self.error("Named arguments are not supported yet")
             if name in self.builtins:
                 return self.builtins[name](*args)
+            if name in self.classes:
+                instance = RostObject(name)
+                init = self.classes[name].get("__init__")
+                if init:
+                    self.call_function(name + ".__init__", [instance] + args)
+                elif args:
+                    self.error(f"{name}() takes no arguments")
+                return instance
             if name in self.functions:
                 return self.call_function(name, args)
             self.error(f"Unknown function: {name}")
@@ -318,6 +398,15 @@ class RostInterpreter:
                 if value is _MISSING: self.variables.pop(p, None)
                 else: self.variables[p] = value
         return None
+
+    @staticmethod
+    def read_text(path):
+        return Path(str(path)).read_text(encoding="utf-8")
+
+    @staticmethod
+    def write_text(path, content):
+        Path(str(path)).write_text(str(content), encoding="utf-8")
+        return True
 
     @staticmethod
     def to_number(value):
