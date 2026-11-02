@@ -1,0 +1,25 @@
+# Guess the number game
+make secret = random_int(1, 20)
+make attempts = 0
+make won = false
+
+say "=== GUESS THE NUMBER ==="
+say "I picked a number from 1 to 20."
+
+while won == false {
+    ask answer = "Your guess: "
+    change attempts = attempts + 1
+    make guess = number(answer)
+
+    when guess == secret {
+        say "Correct! You win!"
+        change won = true
+    } otherwise {
+        when guess < secret {
+            say "Too low!"
+        } otherwise {
+            say "Too high!"
+        }
+    }
+}
+say "Attempts: " + text(attempts)
