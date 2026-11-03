@@ -104,6 +104,9 @@ When the first argument is a folder, `build_site(source_folder, output_folder)` 
 
 - `read_text(path)` — read UTF-8 text.
 - `write_text(path, content)` — write UTF-8 text.
+- `write_html(path, content)` — write an HTML source file.
+- `write_css(path, content)` — write a CSS source file.
+- `build_site(source_folder, output_folder)` — copy a complete static website and its assets.
 - `exists(path)` — check whether a path exists.
 - `list_dir(path=".")` — list directory entries.
 
