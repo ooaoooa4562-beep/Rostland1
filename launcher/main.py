@@ -47,7 +47,7 @@ class RostHighlighter(QSyntaxHighlighter):
 
         string_format = QTextCharFormat()
         string_format.setForeground(QColor("#a5d6a7"))
-        self.rules.append((r'"[^"\\n]*"|\'[^\'\\n]*\'', string_format))
+        self.rules.append((r'"[^"\n]*"|\'[^\'\n]*\'', string_format))
 
         number_format = QTextCharFormat()
         number_format.setForeground(QColor("#f78c6c"))
