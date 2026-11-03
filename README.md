@@ -168,3 +168,17 @@ Supported duration units: `ms`, `s`, `m`, `h`, `d`.
 **0.7.0 is an alpha release, not yet a complete or production-ready language.** It now has a useful core for learning, but it is not Python-compatible and cannot run arbitrary Python packages. The parser is line-based; blocks require braces. Local variables use block scopes; imported modules still share globals and do not yet have isolated namespaces or explicit exports. Inheritance, default/named arguments, decorators, generators, async/await, a package manager, networking, databases, GUI/game frameworks, and a native compiler remain future work.
 
 The long-term plan is to grow RostLang into a general-purpose language for scripts, websites, applications and games, adding and testing each capability incrementally.
+
+## Desktop launcher
+
+RostLang includes an early desktop launcher built with Python and PySide6.
+
+Install its dependency and start the app from the repository root:
+
+```bash
+python -m pip install -r launcher/requirements.txt
+python launcher/main.py
+```
+
+See [launcher/README.md](launcher/README.md) for details. The launcher can create projects, edit and save `.rost` files, run them with this repository's interpreter, display output and send input to running programs.
+
