@@ -64,7 +64,7 @@ KV = """
             on_release: root.run_code()
     TextInput:
         id: editor
-        text: '# Welcome to RostLang!\\nsay "Hello from Android!"\\n'
+        text: '# Welcome to RostLang!\nsay "Hello from Android!"\n'
         multiline: True
         font_name: "Roboto"
         font_size: "14sp"
