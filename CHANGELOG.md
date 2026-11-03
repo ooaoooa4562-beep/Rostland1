@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0-alpha
+- Added Lua-style `Local name = value` declarations with nested block and function scopes
+- Added `Module("name")` as a function-style module import command
+- Added `Time()` / `time_now()` for the current local date and time
+- Added `Period name = 5s` duration declarations (ms, s, m, h, d)
+- Added `write_html` and `write_css` helpers for HTML/CSS source files
+- Expanded `build_site` to copy complete website folders and preserve assets
+- Added tests for the new language features
+
+
 ## 0.6.0-alpha
 - Added `build_site(html_path, css_path, output_dir)` to package HTML/CSS into a publishable static site folder
 - Added a responsive sample website in `examples/web/` and a `.rost` build script
