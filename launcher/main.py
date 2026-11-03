@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 INTERPRETER = REPO_ROOT / "main.py"
+FROZEN_RUNTIME = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "rost_runtime.exe"
 
 
 class RostHighlighter(QSyntaxHighlighter):
@@ -342,12 +343,24 @@ class RostLauncher(QMainWindow):
         if self.process.state() != QProcess.ProcessState.NotRunning:
             self.statusBar().showMessage("A program is already running")
             return
-        if not INTERPRETER.is_file():
-            QMessageBox.critical(
-                self, "Interpreter not found",
-                f"Could not find the RostLang interpreter at:\n{INTERPRETER}"
-            )
-            return
+        if getattr(sys, "frozen", False):
+            if not FROZEN_RUNTIME.is_file():
+                QMessageBox.critical(
+                    self, "Runtime not found",
+                    f"Could not find the bundled RostLang runtime at:\n{FROZEN_RUNTIME}"
+                )
+                return
+            program = str(FROZEN_RUNTIME)
+            arguments = [str(self.current_file)]
+        else:
+            if not INTERPRETER.is_file():
+                QMessageBox.critical(
+                    self, "Interpreter not found",
+                    f"Could not find the RostLang interpreter at:\n{INTERPRETER}"
+                )
+                return
+            program = sys.executable
+            arguments = ["-u", str(INTERPRETER), str(self.current_file)]
         if self.dirty and not self.save_file():
             return
         if self.current_file is None:
@@ -355,8 +368,8 @@ class RostLauncher(QMainWindow):
             return
 
         self.console.appendPlainText(f"> Running {self.current_file.name}")
-        self.process.setProgram(sys.executable)
-        self.process.setArguments(["-u", str(INTERPRETER), str(self.current_file)])
+        self.process.setProgram(program)
+        self.process.setArguments(arguments)
         self.process.setWorkingDirectory(str(self.current_file.parent))
         self.process.start()
         self.run_button.setEnabled(False)
@@ -391,7 +404,9 @@ class RostLauncher(QMainWindow):
     def _read_stderr(self):
         data = bytes(self.process.readAllStandardError()).decode("utf-8", errors="replace")
         if data:
-            self.console.moveCursor(self.console.textCursor().MoveOperation.End)
+            cursor = self.console.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            self.console.setTextCursor(cursor)
             self.console.insertPlainText(data)
             self.console.ensureCursorVisible()
 
