@@ -292,7 +292,7 @@ class RostLauncher(QMainWindow):
         try:
             project_dir.mkdir(parents=True, exist_ok=False)
             (project_dir / "assets").mkdir()
-            starter = '# ' + safe_name + '\\n' + 'say "Hello from RostLang!"\\n'
+            starter = '# ' + safe_name + '\n' + 'say "Hello from RostLang!"\n'
             project_file = project_dir / "main.rost"
             project_file.write_text(starter, encoding="utf-8")
             self.current_file = project_file.resolve()
