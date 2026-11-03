@@ -28,10 +28,10 @@ jobs:
         run: python -m pip install -r launcher/requirements-build.txt
 
       - name: Build standalone RostLang runtime
-        run: pyinstaller --noconfirm --clean --onefile --console --name rost_runtime main.py
+        run: python -m PyInstaller --noconfirm --clean --onefile --console --name rost_runtime main.py
 
       - name: Build graphical launcher
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name RostLangLauncher --add-binary "dist/rost_runtime.exe;." launcher/main.py
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name RostLangLauncher --add-binary "dist/rost_runtime.exe;." launcher/main.py
 
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
