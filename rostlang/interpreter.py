@@ -31,7 +31,7 @@ class ContinueSignal(Exception):
 
 
 class RostInterpreter:
-    """RostLang 0.2 alpha interpreter. Evaluates a restricted expression AST."""
+    """RostLang 0.7 alpha interpreter with scoped variables and time helpers."""
 
     BIN = {
         ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
