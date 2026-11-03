@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QProcess, Qt
-from PySide6.QtGui import QAction, QColor, QFont, QSyntaxHighlighter, QTextCharFormat
+from PySide6.QtGui import QAction, QColor, QFont, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
+    QInputDialog,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
@@ -42,7 +43,7 @@ class RostHighlighter(QSyntaxHighlighter):
             "return", "class", "try", "except", "Local", "Period",
             "use", "Module", "stop", "skip", "True", "False", "None",
         ):
-            self.rules.append((rf"\\b{word}\\b", keyword_format))
+            self.rules.append((rf"\b{word}\b", keyword_format))
 
         string_format = QTextCharFormat()
         string_format.setForeground(QColor("#a5d6a7"))
@@ -50,7 +51,7 @@ class RostHighlighter(QSyntaxHighlighter):
 
         number_format = QTextCharFormat()
         number_format.setForeground(QColor("#f78c6c"))
-        self.rules.append((r"\\b\\d+(?:\\.\\d+)?\\b", number_format))
+        self.rules.append((r"\b\d+(?:\.\d+)?\b", number_format))
 
         comment_format = QTextCharFormat()
         comment_format.setForeground(QColor("#718096"))
@@ -108,6 +109,7 @@ class RostLauncher(QMainWindow):
 
         toolbar = QHBoxLayout()
         self.new_button = self._button("＋  New", "secondary")
+        self.project_button = self._button("New Project", "secondary")
         self.open_button = self._button("Open", "secondary")
         self.save_button = self._button("Save", "secondary")
         self.run_button = self._button("▶  Run", "primary")
@@ -115,7 +117,7 @@ class RostLauncher(QMainWindow):
         self.stop_button.setEnabled(False)
 
         for button in (
-            self.new_button, self.open_button, self.save_button,
+            self.new_button, self.project_button, self.open_button, self.save_button,
             self.run_button, self.stop_button,
         ):
             toolbar.addWidget(button)
@@ -173,6 +175,7 @@ class RostLauncher(QMainWindow):
         self.setStatusBar(QStatusBar())
 
         self.new_button.clicked.connect(self.new_file)
+        self.project_button.clicked.connect(self.new_project)
         self.open_button.clicked.connect(self.open_file)
         self.save_button.clicked.connect(self.save_file)
         self.run_button.clicked.connect(self.run_file)
@@ -271,6 +274,34 @@ class RostLauncher(QMainWindow):
         self._set_editor_text('# New RostLang program\nsay "Hello!"\n')
         self.statusBar().showMessage("New file")
 
+
+    def new_project(self):
+        if not self._confirm_discard():
+            return
+        parent = QFileDialog.getExistingDirectory(
+            self, "Choose where to create the project", str(Path.home())
+        )
+        if not parent:
+            return
+        name, accepted = QInputDialog.getText(self, "New RostLang project", "Project name:")
+        if not accepted or not name.strip():
+            return
+        safe_name = name.strip()
+        project_dir = Path(parent) / safe_name
+        try:
+            project_dir.mkdir(parents=True, exist_ok=False)
+            (project_dir / "assets").mkdir()
+            starter = '# ' + safe_name + '\\n' + 'say "Hello from RostLang!"\\n'
+            project_file = project_dir / "main.rost"
+            project_file.write_text(starter, encoding="utf-8")
+            self.current_file = project_file.resolve()
+            self._set_editor_text(starter)
+            self.statusBar().showMessage(f"Created project {safe_name}")
+        except FileExistsError:
+            QMessageBox.warning(self, "Project exists", "A folder with that name already exists.")
+        except OSError as error:
+            QMessageBox.critical(self, "Project creation failed", str(error))
+
     def open_file(self):
         if not self._confirm_discard():
             return
@@ -325,7 +356,7 @@ class RostLauncher(QMainWindow):
 
         self.console.appendPlainText(f"> Running {self.current_file.name}")
         self.process.setProgram(sys.executable)
-        self.process.setArguments([str(INTERPRETER), str(self.current_file)])
+        self.process.setArguments(["-u", str(INTERPRETER), str(self.current_file)])
         self.process.setWorkingDirectory(str(self.current_file.parent))
         self.process.start()
         self.run_button.setEnabled(False)
@@ -351,7 +382,9 @@ class RostLauncher(QMainWindow):
     def _read_stdout(self):
         data = bytes(self.process.readAllStandardOutput()).decode("utf-8", errors="replace")
         if data:
-            self.console.moveCursor(self.console.textCursor().MoveOperation.End)
+            cursor = self.console.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            self.console.setTextCursor(cursor)
             self.console.insertPlainText(data)
             self.console.ensureCursorVisible()
 
