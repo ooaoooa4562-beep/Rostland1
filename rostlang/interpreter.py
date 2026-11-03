@@ -281,7 +281,7 @@ class RostInterpreter:
             obj.attributes[attr] = self.evaluate(expr.strip())
         elif re.match(r"^[A-Za-z_]\w*\s*=", line):
             name = line.split("=", 1)[0].strip()
-            self.assign(line, name not in self.variables)
+            self.assign(line, not self.has_variable(name))
         elif re.fullmatch(r"[A-Za-z_]\w*\s*\(.*\)", line):
             self.evaluate(line)
         else:
@@ -339,7 +339,7 @@ class RostInterpreter:
             self.error("Use: Period name = 250ms, 5s, 2m, 1h or 1d")
         name, amount, unit = match.groups()
         factors = {"ms": 0.001, "s": 1, "m": 60, "h": 3600, "d": 86400}
-        self.variables[name] = timedelta(seconds=float(amount) * factors[unit])
+        self.scopes[-1][name] = timedelta(seconds=float(amount) * factors[unit])
 
     @staticmethod
     def current_time():
@@ -359,11 +359,21 @@ class RostInterpreter:
         name, expr = name.strip(), expr.strip()
         if not self.NAME.fullmatch(name) or not expr:
             self.error("Invalid variable assignment")
-        if create and name in self.variables:
+        exists = self.has_variable(name)
+        if create and exists:
             self.error(f"'{name}' already exists; use change")
-        if not create and name not in self.variables:
-            self.error(f"'{name}' does not exist; use make")
-        self.variables[name] = self.evaluate(expr)
+        if not create and not exists:
+            self.error(f"'{name}' does not exist; use make or Local")
+        value = self.evaluate(expr)
+        if create:
+            self.variables[name] = value
+        else:
+            for scope in reversed(self.scopes):
+                if name in scope:
+                    scope[name] = value
+                    break
+            else:
+                self.variables[name] = value
 
     def ask(self, text):
         if "=" not in text:
@@ -467,19 +477,30 @@ class RostInterpreter:
         return None
 
     @staticmethod
-    def build_site(html_path, css_path, output_dir="site"):
-        """Copy a static HTML/CSS site into a publishable output directory."""
-        html_source = Path(str(html_path))
+    def build_site(html_path, css_path=None, output_dir="site"):
+        """Copy a complete static site folder or package one HTML/CSS pair."""
+        source = Path(str(html_path))
+        if source.is_dir():
+            destination = Path(str(css_path if css_path is not None else output_dir))
+            if source.resolve() == destination.resolve():
+                raise RostLangError("build_site(): source and destination folders must differ")
+            if destination.exists():
+                shutil.rmtree(destination)
+            shutil.copytree(source, destination, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+            return str(destination)
+
+        if css_path is None:
+            raise RostLangError("build_site(): pass an HTML file and CSS file, or a source folder")
         css_source = Path(str(css_path))
         destination = Path(str(output_dir))
-        if not html_source.is_file():
-            raise RostLangError(f"build_site(): HTML file not found: {html_source}")
+        if not source.is_file():
+            raise RostLangError(f"build_site(): HTML file not found: {source}")
         if not css_source.is_file():
             raise RostLangError(f"build_site(): CSS file not found: {css_source}")
-        if html_source.resolve() == css_source.resolve():
+        if source.resolve() == css_source.resolve():
             raise RostLangError("build_site(): HTML and CSS paths must be different")
         destination.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(html_source, destination / "index.html")
+        shutil.copy2(source, destination / "index.html")
         shutil.copy2(css_source, destination / "style.css")
         return str(destination)
 
