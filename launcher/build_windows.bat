@@ -7,11 +7,11 @@ py -m pip install -r launcher\requirements-build.txt
 if errorlevel 1 goto failed
 
 echo [2/4] Building RostLang runtime...
-pyinstaller --noconfirm --clean --onefile --console --name rost_runtime main.py
+py -m PyInstaller --noconfirm --clean --onefile --console --name rost_runtime main.py
 if errorlevel 1 goto failed
 
 echo [3/4] Building RostLang Launcher...
-pyinstaller --noconfirm --clean --onefile --windowed --name RostLangLauncher --add-binary "dist\rost_runtime.exe;." launcher\main.py
+py -m PyInstaller --noconfirm --clean --onefile --windowed --name RostLangLauncher --add-binary "dist\rost_runtime.exe;." launcher\main.py
 if errorlevel 1 goto failed
 
 echo [4/4] Build complete!
