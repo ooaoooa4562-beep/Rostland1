@@ -542,6 +542,7 @@ class RostInterpreter:
         if value is True: return "true"
         if value is False: return "false"
         if value is None: return "nothing"
+        if isinstance(value, datetime): return value.isoformat(timespec="seconds")
         return str(value)
 
 
