@@ -201,29 +201,26 @@ class RostInterpreter:
                 old_value = self.variables.get(name, _MISSING)
                 try:
                     for value in values:
-                        self.variables[name] = value
+                        self.scopes.append({name: value})
                         try:
-                            self.execute(body)
+                            self.execute(body, new_scope=True)
                         except ContinueSignal:
                             continue
                         except BreakSignal:
                             break
+                        finally:
+                            self.scopes.pop()
                 finally:
-                    if old_value is _MISSING: self.variables.pop(name, None)
-                    else: self.variables[name] = old_value
+                    pass
             elif kind == "try":
                 _, body, error_name, handler, line = item
                 self.line = line
                 try:
-                    self.execute(body)
+                    self.execute(body, new_scope=True)
                 except (RostLangError, ArithmeticError, ValueError, TypeError, IndexError, KeyError) as exc:
                     if not handler: raise
-                    old_value = self.variables.get(error_name, _MISSING)
-                    self.variables[error_name] = str(exc)
-                    try: self.execute(handler)
-                    finally:
-                        if old_value is _MISSING: self.variables.pop(error_name, None)
-                        else: self.variables[error_name] = old_value
+                    self.execute([( "line", f"Local {error_name} = {str(exc)!r}", line)], new_scope=True)
+                    self.execute(handler, new_scope=True)
             elif kind == "class":
                 _, name, body, line = item
                 self.line = line
@@ -275,7 +272,7 @@ class RostInterpreter:
         elif re.match(r"^[A-Za-z_]\w*\.[A-Za-z_]\w*\s*=", line):
             target, expr = line.split("=", 1)
             object_name, attr = target.strip().split(".", 1)
-            obj = self.variables.get(object_name)
+            obj = self.get_variable(object_name) if self.has_variable(object_name) else None
             if not isinstance(obj, RostObject):
                 self.error("Attribute assignment expects an object")
             obj.attributes[attr] = self.evaluate(expr.strip())
@@ -334,7 +331,7 @@ class RostInterpreter:
         self.scopes[-1][name] = self.evaluate(expr)
 
     def period_assign(self, text):
-        match = re.fullmatch(r"([A-Za-z_]\\w*)\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*(ms|s|m|h|d)", text)
+        match = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)", text)
         if not match:
             self.error("Use: Period name = 250ms, 5s, 2m, 1h or 1d")
         name, amount, unit = match.groups()
