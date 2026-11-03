@@ -88,7 +88,7 @@ The current handler catches RostLang errors and common arithmetic, conversion, i
 RostLang 0.7 can write HTML/CSS source files and package a complete static website folder, including JavaScript and image assets:
 
 ```rost
-build_site("examples/web/index.html", "examples/web/style.css", "site")
+build_site("examples/web", "site")
 say "Website built in ./site"
 ```
 
