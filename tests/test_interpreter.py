@@ -126,5 +126,61 @@ except problem {
             self.assertEqual(self.run_code(source, str(main)), ["1"])
 
 
+    def test_local_variables_follow_block_scope(self):
+        code = '''Local outside = "global"
+action demo() {
+    Local inside = 7
+    change inside = inside + 1
+    return inside
+}
+print(demo())
+print(outside)'''
+        self.assertEqual(self.run_code(code), ["8", "global"])
+
+    def test_local_inside_if_does_not_escape(self):
+        from rostlang.errors import RostLangError
+        code = '''if true {
+    Local hidden = 12
+}
+print(hidden)'''
+        with self.assertRaises(RostLangError):
+            self.run_code(code)
+
+    def test_period_and_time_commands(self):
+        code = '''Period short_wait = 5s
+Period long_wait = 2m
+print(short_wait)
+print(long_wait)
+print(Time())'''
+        output = self.run_code(code)
+        self.assertEqual(output[:2], ["0:00:05", "0:02:00"])
+        self.assertIn("T", output[2])
+
+    def test_module_function_call(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "tools.rost").write_text(
+                "action triple(n) {\\n return n * 3\\n}\\n", encoding="utf-8"
+            )
+            main = root / "main.rost"
+            source = 'Module("tools")\\nprint(triple(14))'
+            main.write_text(source, encoding="utf-8")
+            self.assertEqual(self.run_code(source, str(main)), ["42"])
+
+    def test_build_site_copies_complete_folder(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "web"
+            (source / "assets").mkdir(parents=True)
+            (source / "index.html").write_text("<h1>Hello</h1>", encoding="utf-8")
+            (source / "style.css").write_text("body { color: red; }", encoding="utf-8")
+            (source / "assets" / "app.js").write_text("console.log('ok')", encoding="utf-8")
+            destination = root / "dist"
+            code = 'build_site("' + str(source) + '", "' + str(destination) + '")'
+            self.run_code(code)
+            self.assertTrue((destination / "index.html").is_file())
+            self.assertTrue((destination / "assets" / "app.js").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()
