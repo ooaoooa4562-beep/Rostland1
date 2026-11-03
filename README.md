@@ -1,4 +1,4 @@
-# RostLang 0.6.0 Alpha
+# RostLang 0.7.0 Alpha
 
 RostLang is an experimental general-purpose language with a hybrid syntax. It combines original commands such as `say` and `make` with selected Python-like syntax. The interpreter is implemented in Python and source files use `.rost`.
 
@@ -85,7 +85,7 @@ The current handler catches RostLang errors and common arithmetic, conversion, i
 
 ## Build a static website
 
-RostLang 0.6 adds an initial HTML/CSS website build helper. Keep your site source files in a folder, then call `build_site` from a `.rost` script:
+RostLang 0.7 can write HTML/CSS source files and package a complete static website folder, including JavaScript and image assets:
 
 ```rost
 build_site("examples/web/index.html", "examples/web/style.css", "site")
@@ -98,9 +98,7 @@ Run it from the repository root:
 python main.py examples/build_website.rost
 ```
 
-The helper copies the HTML to `site/index.html` and CSS to `site/style.css`. Your HTML should link to the stylesheet with `<link rel="stylesheet" href="style.css">`. Open `site/index.html` in a browser to preview it. The generated `site/` directory is a static website that can be published using a static host such as GitHub Pages.
-
-**Current limitation:** this first web feature only packages HTML and CSS files. RostLang does not yet run inside the browser or handle browser click events, and this helper does not create a server or database. Browser interactivity is a future feature.
+When the first argument is a folder, `build_site(source_folder, output_folder)` copies the entire website tree, preserving pages, CSS, JavaScript, images and other assets. The older three-argument form `build_site(html_file, css_file, output_folder)` remains available. Open the output `index.html` in a browser or publish the folder with a static host such as GitHub Pages. RostLang packages standard HTML/CSS/JS files; it does not execute browser JavaScript or provide a browser runtime, backend server or database.
 
 ## Files
 
@@ -111,13 +109,50 @@ The helper copies the HTML to `site/index.html` and CSS to `site/style.css`. You
 
 These APIs access the filesystem available to the running process. Only use paths you trust.
 
-## Collections and modules
+## Local variables
 
-Lists, tuples, dictionaries, indexing and module imports are supported. Use `use "module.rost"` to import a relative `.rost` module. Modules load once per interpreter run.
+`Local` creates a variable in the current scope. It is visible inside that block and nested blocks, but not after the scope ends. Function parameters are also local.
+
+```rost
+Local site_name = "RostLang"
+
+action greet() {
+    Local message = "Hello " + site_name
+    say message
+}
+
+greet()
+```
+
+## Modules
+
+Use either the original `use` command or the function-style `Module()` command. A `.rost` extension is optional in `Module()`. Modules load once per run and share the interpreter's global functions and variables.
+
+```rost
+Module("math_tools")
+# same as: use "math_tools.rost"
+```
+
+## Time and periods
+
+`Time()` returns the current local date and time with its timezone. `Period` creates a duration value:
+
+```rost
+make started_at = Time()
+Period pause = 5s
+Period cache_lifetime = 15m
+Period lesson = 1.5h
+Period deadline = 2d
+say started_at
+say pause
+```
+
+Supported duration units: `ms`, `s`, `m`, `h`, `d`.
+
 
 ## Built-ins
 
-`random`, `random_int`, `length`, `text`, `number`, `abs`, `min`, `max`, `sum`, `round`, `floor`, `ceil`, `sqrt`, `append`, `pop`, `str`, `int`, `float`, `bool`, `input`, `range`, `read_text`, `write_text`, `exists`, `list_dir`.
+`Time`, `time_now`, `Module`, `write_html`, `write_css`, `build_site`, `random`, `random_int`, `length`, `text`, `number`, `abs`, `min`, `max`, `sum`, `round`, `floor`, `ceil`, `sqrt`, `append`, `pop`, `str`, `int`, `float`, `bool`, `input`, `range`, `read_text`, `write_text`, `exists`, `list_dir`.
 
 ## Architecture
 
@@ -127,6 +162,6 @@ Lists, tuples, dictionaries, indexing and module imports are supported. Use `use
 
 ## Important limitations
 
-**0.5.0 is an alpha release, not yet a complete or production-ready language.** It now has a useful core for learning, but it is not Python-compatible and cannot run arbitrary Python packages. The parser is line-based; blocks require braces. Function scoping is basic. Inheritance, default/named arguments, decorators, generators, async/await, a package manager, networking, databases, GUI/game frameworks, and a native compiler remain future work.
+**0.7.0 is an alpha release, not yet a complete or production-ready language.** It now has a useful core for learning, but it is not Python-compatible and cannot run arbitrary Python packages. The parser is line-based; blocks require braces. Local variables use block scopes; imported modules still share globals and do not yet have isolated namespaces or explicit exports. Inheritance, default/named arguments, decorators, generators, async/await, a package manager, networking, databases, GUI/game frameworks, and a native compiler remain future work.
 
 The long-term plan is to grow RostLang into a general-purpose language for scripts, websites, applications and games, adding and testing each capability incrementally.
