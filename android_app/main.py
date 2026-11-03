@@ -41,7 +41,7 @@ KV = """
             halign: "left"
             text_size: self.size
         Label:
-            text: "ANDROID  •  " + app_version
+            text: "ANDROID  •  " + app.app_version
             color: 0.55, 0.65, 0.82, 1
             font_size: "10sp"
             halign: "right"
@@ -66,7 +66,7 @@ KV = """
         id: editor
         text: '# Welcome to RostLang!\\nsay "Hello from Android!"\\n'
         multiline: True
-        font_name: "RobotoMono-Regular"
+        font_name: "Roboto"
         font_size: "14sp"
         background_color: 0.055, 0.085, 0.14, 1
         foreground_color: 0.86, 0.91, 0.98, 1
