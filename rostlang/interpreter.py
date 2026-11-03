@@ -219,8 +219,11 @@ class RostInterpreter:
                     self.execute(body, new_scope=True)
                 except (RostLangError, ArithmeticError, ValueError, TypeError, IndexError, KeyError) as exc:
                     if not handler: raise
-                    self.execute([( "line", f"Local {error_name} = {str(exc)!r}", line)], new_scope=True)
-                    self.execute(handler, new_scope=True)
+                    self.scopes.append({error_name: str(exc)})
+                    try:
+                        self.execute(handler)
+                    finally:
+                        self.scopes.pop()
             elif kind == "class":
                 _, name, body, line = item
                 self.line = line
