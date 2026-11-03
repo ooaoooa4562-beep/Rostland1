@@ -1,4 +1,5 @@
 import ast
+from datetime import datetime, timedelta
 import math
 import operator
 import random
@@ -47,6 +48,7 @@ class RostInterpreter:
 
     def __init__(self):
         self.variables = {}
+        self.scopes = [{}]
         self.functions = {}
         self.classes = {}
         self.depth = 0
@@ -65,12 +67,17 @@ class RostInterpreter:
             "exists": lambda path: Path(str(path)).exists(),
             "list_dir": lambda path=".": [p.name for p in Path(str(path)).iterdir()],
             "build_site": self.build_site,
+            "write_html": self.write_text, "write_css": self.write_text,
+            "Time": self.current_time, "time_now": self.current_time,
+            "Module": self.module_import,
         }
 
     def run(self, source, filename="<memory>"):
         self.filename = filename
         self.loaded_modules = set()
         self.loading_modules = set()
+        self.variables = {}
+        self.scopes = [{}]
         program = Parser(source, filename).parse()
         self.execute(program)
 
@@ -134,13 +141,22 @@ class RostInterpreter:
             self.error("Missing closing '}'", len(self.lines) or 1)
         return result
 
-    def execute(self, statements):
+    def execute(self, statements, new_scope=False):
+        if new_scope:
+            self.scopes.append({})
+        try:
+            self._execute_statements(statements)
+        finally:
+            if new_scope:
+                self.scopes.pop()
+
+    def _execute_statements(self, statements):
         for item in statements:
             kind = item[0]
             if kind == "when":
                 _, expr, yes, no, line = item
                 self.line = line
-                self.execute(yes if self.truth(self.evaluate(expr)) else no)
+                self.execute(yes if self.truth(self.evaluate(expr)) else no, new_scope=True)
             elif kind in ("repeat", "while"):
                 _, expr, body, line = item
                 self.line = line
@@ -162,7 +178,7 @@ class RostInterpreter:
                     if loops > 100000:
                         self.error("Loop exceeded 100000 iterations")
                     try:
-                        self.execute(body)
+                        self.execute(body, new_scope=True)
                     except ContinueSignal:
                         continue
                     except BreakSignal:
@@ -238,6 +254,10 @@ class RostInterpreter:
             self.assign(line.split(" ", 1)[1].strip(), True)
         elif line.startswith("change "):
             self.assign(line[7:].strip(), False)
+        elif line.startswith("Local "):
+            self.local_assign(line[6:].strip())
+        elif line.startswith("Period "):
+            self.period_assign(line[7:].strip())
         elif line.startswith("ask "):
             self.ask(line[4:].strip())
         elif line == "stop":
@@ -293,6 +313,45 @@ class RostInterpreter:
             self.filename = previous_filename
             self.loading_modules.discard(module_path)
 
+    def has_variable(self, name):
+        return name in self.variables or any(name in scope for scope in reversed(self.scopes))
+
+    def get_variable(self, name):
+        for scope in reversed(self.scopes):
+            if name in scope:
+                return scope[name]
+        if name in self.variables:
+            return self.variables[name]
+        self.error(f"Unknown variable: {name}")
+
+    def local_assign(self, text):
+        if "=" not in text:
+            self.error("Use: Local name = expression")
+        name, expr = text.split("=", 1)
+        name, expr = name.strip(), expr.strip()
+        if not self.NAME.fullmatch(name) or not expr or name in self.scopes[-1]:
+            self.error("Invalid or duplicate local variable declaration")
+        self.scopes[-1][name] = self.evaluate(expr)
+
+    def period_assign(self, text):
+        match = re.fullmatch(r"([A-Za-z_]\\w*)\\s*=\\s*(\\d+(?:\\.\\d+)?)\\s*(ms|s|m|h|d)", text)
+        if not match:
+            self.error("Use: Period name = 250ms, 5s, 2m, 1h or 1d")
+        name, amount, unit = match.groups()
+        factors = {"ms": 0.001, "s": 1, "m": 60, "h": 3600, "d": 86400}
+        self.variables[name] = timedelta(seconds=float(amount) * factors[unit])
+
+    @staticmethod
+    def current_time():
+        return datetime.now().astimezone()
+
+    def module_import(self, module_name):
+        if not isinstance(module_name, str):
+            self.error("Module() expects a quoted module path")
+        if not module_name.endswith(".rost"):
+            module_name += ".rost"
+        return self.load_module(repr(module_name))
+
     def assign(self, text, create):
         if "=" not in text:
             self.error("Expected '=' in assignment")
@@ -327,8 +386,8 @@ class RostInterpreter:
         if isinstance(n, ast.Constant) and isinstance(n.value, (str, int, float, bool, type(None))):
             return n.value
         if isinstance(n, ast.Name):
-            if n.id in self.variables:
-                return self.variables[n.id]
+            if self.has_variable(n.id):
+                return self.get_variable(n.id)
             if n.id == "true": return True
             if n.id == "false": return False
             if n.id == "nothing": return None
@@ -396,8 +455,7 @@ class RostInterpreter:
             self.error(f"{name}() expects {len(params)} argument(s)")
         if self.depth >= 100:
             self.error("Maximum function call depth reached")
-        old = {p: self.variables.get(p, _MISSING) for p in params}
-        self.variables.update(dict(zip(params, args)))
+        self.scopes.append(dict(zip(params, args)))
         self.depth += 1
         try:
             self.execute(body)
@@ -405,9 +463,7 @@ class RostInterpreter:
             return result.value
         finally:
             self.depth -= 1
-            for p, value in old.items():
-                if value is _MISSING: self.variables.pop(p, None)
-                else: self.variables[p] = value
+            self.scopes.pop()
         return None
 
     @staticmethod
