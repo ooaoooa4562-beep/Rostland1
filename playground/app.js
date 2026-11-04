@@ -213,7 +213,7 @@ if _error:
 _output
 `);
     finalText = result || "Программа завершилась без вывода.";
-    failed = result.includes("RostLang error:");
+    failed = String(result || "").includes("RostLang error:");
     showOutput(finalText, failed);
   } catch (error) {
     finalText = String(error);
