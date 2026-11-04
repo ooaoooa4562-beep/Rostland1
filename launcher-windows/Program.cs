@@ -1,6 +1,7 @@
 using Microsoft.Web.WebView2.WinForms;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace RostLangLauncher;
@@ -25,9 +26,16 @@ public sealed class LauncherForm : Form
         {
             try
             {
+                var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RostLang", "launcher");
+                Directory.CreateDirectory(root);
+                foreach (var name in new[] { "index.html", "style.css", "runtime.js", "app.js" })
+                {
+                    using var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("RostLauncher." + name)
+                        ?? throw new FileNotFoundException("Missing embedded launcher asset: " + name);
+                    using var output = File.Create(Path.Combine(root, name));
+                    await input.CopyToAsync(output);
+                }
                 await view.EnsureCoreWebView2Async();
-                var root = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-                if (!Directory.Exists(root)) root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "launcher-web"));
                 view.CoreWebView2.Navigate(new Uri(Path.Combine(root, "index.html")).AbsoluteUri);
             }
             catch (Exception ex) { MessageBox.Show("WebView2 could not start. Install Microsoft Edge WebView2 Runtime.\n\n" + ex.Message, "RostLang"); }
