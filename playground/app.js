@@ -78,9 +78,82 @@ function setStatus(message, state = "") {
   statusEl.querySelector("span").textContent = message;
 }
 
+const terminalEl = document.getElementById("terminal-output");
+const modal = document.getElementById("run-modal");
+const runCodePreview = document.getElementById("run-code-preview");
+const runResultPreview = document.getElementById("run-result-preview");
+const runResultState = document.getElementById("run-result-state");
+const consoleState = document.getElementById("console-state");
+
 function showOutput(text, isError = false) {
-  outputEl.textContent = text || (isError ? "Произошла ошибка." : "Программа завершилась без вывода.");
+  const value = text || (isError ? "Произошла ошибка." : "Программа завершилась без вывода.");
+  outputEl.textContent = value;
   outputEl.style.color = isError ? "#ff9aa9" : "#b9f6d1";
+  consoleState.textContent = isError ? "Ошибка выполнения" : "Готово";
+  terminalEl.textContent = [
+    "$ rost run main.rost",
+    isError ? "[ERROR] Выполнение завершилось с ошибкой" : "[OK] Выполнение завершено",
+    "",
+    value
+  ].join("\\n");
+}
+
+function openRunModal(source, result, isError, duration) {
+  runCodePreview.textContent = source || "// Пустой файл";
+  runResultPreview.textContent = result || "Программа завершилась без вывода.";
+  document.querySelector(".result-window").classList.toggle("error", isError);
+  runResultState.textContent = isError ? "ERROR" : "SUCCESS";
+  document.getElementById("run-duration").textContent = "Время выполнения: " + duration + " · RostLang 0.7.0-alpha";
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.getElementById("modal-ok").focus();
+}
+
+function closeRunModal() {
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+document.getElementById("close-run-modal").addEventListener("click", closeRunModal);
+document.getElementById("modal-ok").addEventListener("click", closeRunModal);
+modal.addEventListener("click", event => { if (event.target === modal) closeRunModal(); });
+document.addEventListener("keydown", event => { if (event.key === "Escape") closeRunModal(); });
+
+document.querySelectorAll("[data-tab]").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll("[data-tab]").forEach(item => item.classList.toggle("active", item === tab));
+    document.querySelectorAll(".output-view").forEach(view => view.classList.toggle("active", view.id === tab.dataset.tab + "-view"));
+  });
+});
+
+const chatForm = document.getElementById("chat-form");
+const chatInput = document.getElementById("chat-input");
+const chatMessages = document.getElementById("chat-messages");
+function addChatMessage(message, type) {
+  const bubble = document.createElement("div");
+  bubble.className = "chat-bubble " + type;
+  bubble.textContent = message;
+  chatMessages.appendChild(bubble);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+function getHelpAnswer(question) {
+  const q = question.toLowerCase();
+  if (q.includes("ask")) return 'Команда ask запрашивает ввод. Пример: ask user_password = "Введите пароль: "';
+  if (q.includes("make") || q.includes("перемен")) return 'make создаёт переменную. Например: make score = 100. Чтобы изменить её значение, используй change score = 200.';
+  if (q.includes("say") || q.includes("вывод")) return 'say выводит значение в консоль. Пример: say "Hello, RostLang!"';
+  if (q.includes("when") || q.includes("услов")) return 'when проверяет условие. Можно добавить блок otherwise для альтернативного действия.';
+  if (q.includes("while") || q.includes("repeat") || q.includes("цикл")) return 'while повторяет блок, пока условие истинно. repeat 3 { say "Привет" } выполняет блок три раза.';
+  if (q.includes("функц") || q.includes("action")) return 'Функция объявляется через action greet(name) { say "Hello, " + name }, а вызывается так: greet("RostLang").';
+  if (q.includes("ошиб") || q.includes("error")) return 'При ошибке посмотри номер строки в сообщении консоли. Сверь синтаксис команды и скобки { }.';
+  return 'Я пока локальная справка, а не подключённая ИИ-модель. Могу подсказать по make, change, say, ask, when, otherwise, while, repeat и action.';
+}
+chatForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const question = chatInput.value.trim();
+  if (!question) return;
+  addChatMessage(question, "user");
+  addChatMessage(getHelpAnswer(question), "assistant");
+  chatInput.value = "";
 }
 
 async function loadRuntime() {
@@ -113,12 +186,17 @@ async function loadRuntime() {
 }
 
 async function runCode() {
+  const sourceSnapshot = editor.getValue();
+  const startedAt = performance.now();
+  let finalText = "";
+  let failed = false;
   runBtn.disabled = true;
   runBtn.innerHTML = "<span>◌</span> Выполняется…";
   showOutput("Запуск программы…");
+  document.querySelector('[data-tab="console"]').click();
   try {
     const runtime = await loadRuntime();
-    runtime.globals.set("rost_source", editor.getValue());
+    runtime.globals.set("rost_source", sourceSnapshot);
     const result = await runtime.runPythonAsync(`
 import io, contextlib, traceback
 from rostlang.interpreter import RostInterpreter
@@ -134,10 +212,16 @@ if _error:
     _output = (_output + "\\n" if _output else "") + "RostLang error: " + _error
 _output
 `);
-    showOutput(result, result.includes("RostLang error:"));
+    finalText = result || "Программа завершилась без вывода.";
+    failed = result.includes("RostLang error:");
+    showOutput(finalText, failed);
   } catch (error) {
-    showOutput(String(error), true);
+    finalText = String(error);
+    failed = true;
+    showOutput(finalText, true);
   } finally {
+    const elapsed = Math.max(1, Math.round(performance.now() - startedAt));
+    openRunModal(sourceSnapshot, finalText, failed, elapsed + " мс");
     runBtn.disabled = false;
     runBtn.innerHTML = "<span>▶</span> Запустить код";
   }
