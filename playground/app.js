@@ -154,7 +154,7 @@ chatForm.addEventListener("submit", event => {
   addChatMessage(question, "user");
   addChatMessage(getHelpAnswer(question), "assistant");
   chatInput.value = "";
-}
+});
 
 async function loadRuntime() {
   if (pyodide) return pyodide;
