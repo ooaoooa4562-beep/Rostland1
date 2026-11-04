@@ -64,11 +64,21 @@ when score > 10 {
           <p class="run-hint">Код выполняется в браузере с помощью Python runtime.</p>
         </div>
         <div class="panel output-panel">
-          <div class="panel-head">
-            <span class="panel-title">Консоль</span>
+          <div class="panel-head output-head">
+            <div class="output-tabs" role="tablist" aria-label="Инструменты">
+              <button class="output-tab active" data-tab="console" type="button">Консоль</button>
+              <button class="output-tab" data-tab="terminal" type="button">Терминал</button>
+              <button class="output-tab" data-tab="chat" type="button">Чат</button>
+            </div>
             <button class="subtle-btn" id="clear-output" type="button">Очистить</button>
           </div>
-          <pre id="output" aria-live="polite"><span class="muted">Здесь появится результат выполнения…</span></pre>
+          <section class="output-view active" id="console-view"><div class="console-meta"><span class="live-dot"></span> OUTPUT <span id="console-state">Ожидание запуска</span></div><pre id="output" aria-live="polite"><span class="muted">Здесь появится результат выполнения…</span></pre></section>
+          <section class="output-view terminal-view" id="terminal-view"><div class="terminal-bar"><span>rostlang@playground</span><span>SESSION 01</span></div><pre id="terminal-output"><span class="muted">Терминал готов. Нажми «Запустить код».</span></pre></section>
+          <section class="output-view chat-view" id="chat-view">
+            <div class="chat-intro"><span class="chat-avatar">R</span><div><b>RostLang помощник</b><small>Локальная справка · без подключения к ИИ</small></div></div>
+            <div class="chat-messages" id="chat-messages"><div class="chat-bubble assistant">Привет! Я помогу разобраться с командами RostLang. Спроси, например, про <code>make</code>, <code>ask</code>, условия или циклы.</div></div>
+            <form class="chat-form" id="chat-form"><input id="chat-input" autocomplete="off" placeholder="Спроси о RostLang…" aria-label="Сообщение помощнику"><button type="submit" aria-label="Отправить сообщение">↑</button></form>
+          </section>
         </div>
         <div class="panel help-panel">
           <div class="panel-head"><span class="panel-title">Быстрые команды</span></div>
@@ -97,6 +107,16 @@ when score > 10 {
     <button data-example="lists">Списки</button>
   </div>
 
+  <div class="run-modal" id="run-modal" aria-hidden="true">
+    <div class="run-dialog" role="dialog" aria-modal="true" aria-labelledby="run-modal-title">
+      <div class="run-dialog-head"><div><span class="eyebrow">ROSTLANG EXECUTION</span><h2 id="run-modal-title">Результат запуска</h2></div><button class="modal-close" id="close-run-modal" type="button" aria-label="Закрыть">×</button></div>
+      <div class="run-dialog-grid">
+        <section class="mini-window"><div class="mini-window-head"><span class="window-lights"><i></i><i></i><i></i></span><span>main.rost · предпросмотр</span><span class="mini-tag">CODE</span></div><pre id="run-code-preview"></pre></section>
+        <section class="mini-window result-window"><div class="mini-window-head"><span class="window-lights"><i></i><i></i><i></i></span><span>Вывод программы</span><span class="mini-tag result-tag" id="run-result-state">OUTPUT</span></div><pre id="run-result-preview">Программа готовится к запуску…</pre></section>
+      </div>
+      <div class="run-dialog-foot"><span id="run-duration">Выполнение в браузере</span><button class="run-dialog-ok" id="modal-ok" type="button">Понятно</button></div>
+    </div>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
