@@ -11,6 +11,16 @@ on:
 permissions:
   contents: read
 jobs:
+  runtime-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Check runtime syntax
+        run: node --check launcher-web/runtime.js
+      - name: Run runtime smoke tests
+        run: node tests-js/runtime.test.cjs
   windows:
     runs-on: windows-latest
     steps:
