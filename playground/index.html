@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090d18">
+  <title>RostLang Playground</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#"><span class="brand-mark">R</span><span>RostLang <b>Playground</b></span></a>
+    <div class="top-actions">
+      <span class="version">0.7.0-alpha</span>
+      <a class="github-link" href="https://github.com/ooaoooa4562-beep/Rostland1" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">ONLINE CODE EDITOR</p>
+        <h1>Пиши. Запускай. <span>Создавай.</span></h1>
+        <p class="subtitle">Экспериментируй с RostLang прямо в браузере — установка не нужна.</p>
+      </div>
+      <div class="status" id="runtime-status"><i></i><span>Загрузка Python runtime…</span></div>
+    </section>
+
+    <section class="workspace">
+      <div class="editor-panel panel">
+        <div class="panel-head">
+          <div class="file-tab"><span class="file-dot"></span> main.rost</div>
+          <div class="editor-tools">
+            <button class="subtle-btn" id="examples-btn" type="button">Примеры ▾</button>
+            <button class="subtle-btn" id="reset-btn" type="button">Сбросить</button>
+          </div>
+        </div>
+        <div class="editor-wrap">
+          <textarea id="code-editor">make name = "RostLang"
+say "Hello, " + name
+
+make score = 10
+change score = score + 5
+say "Score: " + text(score)
+
+when score > 10 {
+    say "Great job!"
+} otherwise {
+    say "Keep learning!"
+}</textarea>
+        </div>
+        <div class="editor-footer">
+          <span id="cursor-info">Строка 1, столбец 1</span>
+          <span>UTF-8 · .rost</span>
+        </div>
+      </div>
+
+      <aside class="side-column">
+        <div class="panel run-panel">
+          <div class="panel-head"><span class="panel-title">Запуск программы</span><span class="shortcut">Ctrl + Enter</span></div>
+          <button class="run-btn" id="run-btn" type="button"><span>▶</span> Запустить код</button>
+          <p class="run-hint">Код выполняется в браузере с помощью Python runtime.</p>
+        </div>
+        <div class="panel output-panel">
+          <div class="panel-head">
+            <span class="panel-title">Консоль</span>
+            <button class="subtle-btn" id="clear-output" type="button">Очистить</button>
+          </div>
+          <pre id="output" aria-live="polite"><span class="muted">Здесь появится результат выполнения…</span></pre>
+        </div>
+        <div class="panel help-panel">
+          <div class="panel-head"><span class="panel-title">Быстрые команды</span></div>
+          <div class="quick-list">
+            <button type="button" data-insert="say \"Hello, world!\""><code>say</code><span>Вывести текст</span></button>
+            <button type="button" data-insert="make score = 100"><code>make</code><span>Создать переменную</span></button>
+            <button type="button" data-insert="when score > 10 {\n    say \"Nice!\"\n}"><code>when</code><span>Условие</span></button>
+            <button type="button" data-insert="repeat 3 {\n    say \"RostLang\"\n}"><code>repeat</code><span>Повторить код</span></button>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <footer class="page-footer">
+      <span>RostLang — экспериментальный язык программирования.</span>
+      <span>Сделано для обучения и экспериментов ✦</span>
+    </footer>
+  </main>
+
+  <div class="examples-menu" id="examples-menu" hidden>
+    <button data-example="hello">Hello World</button>
+    <button data-example="variables">Переменные</button>
+    <button data-example="conditions">Условия</button>
+    <button data-example="loops">Циклы</button>
+    <button data-example="functions">Функции</button>
+    <button data-example="lists">Списки</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
