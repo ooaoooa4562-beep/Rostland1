@@ -97,6 +97,7 @@
       if((m=s.match(/^change\s+([A-Za-z_]\w*)\s*=\s*(.+)$/))){this.set(m[1],this.eval(m[2]));return;}
       if((m=s.match(/^Local\s+([A-Za-z_]\w*)\s*=\s*(.+)$/))){this.set(m[1],this.eval(m[2]),true);return;}
       if((m=s.match(/^Period\s+([A-Za-z_]\w*)\s*=\s*(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/))){const f={ms:.001,s:1,m:60,h:3600,d:86400};this.set(m[1],Number(m[2])*f[m[3]],true);return;}
+      if(s.startsWith("call ")){this.eval(s.slice(5));return;}
       if((m=s.match(/^return(?:\s+(.+))?$/)))throw {__return:true,value:m[1]?this.eval(m[1]):null};
       if((m=s.match(/^ask\s+([A-Za-z_]\w*)\s*=\s*(.+)$/))){const prompt=this.str(this.eval(m[2]));this.set(m[1],this.io.input?this.io.input(prompt):"",false,true);return;}
       if(s==="stop"||s==="skip")throw new RostError(s+" is not yet supported in this runtime");
@@ -105,7 +106,7 @@
       throw new RostError("Unknown command: "+s.split(/\s/)[0]);
     }
     has(n){return n in this.vars||this.scopes.some(s=>n in s);}
-    run(source){this.vars={};this.scopes=[];this.funcs={};this.steps=0;this.exec(this.parse(source));}
+    run(source){this.vars={};this.scopes=[{}];this.funcs={};this.steps=0;this.exec(this.parse(source));}
   }
   root.RostRuntime=RostRuntime;
 })(typeof window!=="undefined"?window:globalThis);
