@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>RostLang Launcher</title><link rel="stylesheet" href="style.css"></head>
+<body><main class="app"><header><div><div class="brand">ROSTLANG</div><div class="sub">UNIFIED LAUNCHER · EXPERIMENTAL</div></div><div id="filename">Untitled.rost</div></header>
+<nav><button id="new">New</button><button id="open">Open</button><button id="save">Save</button><button id="run" class="primary">▶ Run</button><button id="clear">Clear output</button><input id="file" type="file" accept=".rost,text/plain" hidden></nav>
+<section class="workspace"><div class="panel"><div class="panel-title">EDITOR <span>.ROST</span></div><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off"># Welcome to RostLang!
+make name = "RostLang"
+say "Hello from " + name
+
+repeat 3 {
+    say "Let's build!"
+}
+</textarea></div><div class="panel output-panel"><div class="panel-title">OUTPUT / CONSOLE</div><pre id="output">Ready. RostLang JavaScript runtime is experimental.</pre><div class="input-row"><input id="stdin" placeholder="Program input (for ask)"><button id="send">Send</button></div></div></section>
+<footer><span>RostLang 0.7 · JavaScript port in progress</span><span id="status">Ready</span></footer></main><script src="runtime.js"></script><script src="app.js"></script></body></html>
