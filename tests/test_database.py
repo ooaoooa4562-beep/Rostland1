@@ -14,6 +14,7 @@ class DatabaseLibraryTests(unittest.TestCase):
 
     def test_crud_and_helpers(self):
         output = self.run_rost("""
+use "libraries/database.rost"
 make db = DBOpen(":memory:")
 DBCreateTable(db, "students", {"id": "INTEGER PRIMARY KEY AUTOINCREMENT", "name": "TEXT NOT NULL", "age": "INTEGER"})
 make first = DBInsert(db, "students", {"name": "Ada", "age": 14})
