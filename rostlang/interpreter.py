@@ -81,6 +81,8 @@ class RostInterpreter:
             "StartsWith": lambda value, prefix: str(value).startswith(str(prefix)),
             "EndsWith": lambda value, suffix: str(value).endswith(str(suffix)),
             "CreateFile": self.create_file,
+            "DeleteFile": self.delete_file,
+            "DeleteFolder": self.delete_folder,
             "RenameFile": self.rename_file,
             "CopyFile": self.copy_file,
             "CreateFolder": self.create_folder,
@@ -553,6 +555,23 @@ class RostInterpreter:
         if not target.parent.exists():
             raise RostLangError(f"CreateFile(): parent folder does not exist: {target.parent}")
         target.write_text(str(content), encoding="utf-8")
+        return True
+
+    @staticmethod
+    def delete_file(path):
+        target = Path(str(path))
+        if not target.exists() or not target.is_file():
+            raise RostLangError(f"DeleteFile(): file not found: {target}")
+        target.unlink()
+        return True
+
+    @staticmethod
+    def delete_folder(path):
+        target = Path(str(path))
+        if not target.exists() or not target.is_dir():
+            raise RostLangError(f"DeleteFolder(): folder not found: {target}")
+        # Only remove empty folders; non-empty folders are preserved.
+        target.rmdir()
         return True
 
     @staticmethod
