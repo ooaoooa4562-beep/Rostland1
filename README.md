@@ -112,6 +112,56 @@ When the first argument is a folder, `build_site(source_folder, output_folder)` 
 
 These APIs access the filesystem available to the running process. Only use paths you trust.
 
+## Database library (SQLite)
+
+Load the standard database module in a `.rost` program:
+
+```rost
+use "libraries/database.rost"
+
+make db = DBOpen("school.db")
+DBCreateTable(db, "students", {
+    "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+    "name": "TEXT NOT NULL",
+    "age": "INTEGER"
+})
+
+DBInsert(db, "students", {"name": "Alex", "age": 14})
+say DBSelect(db, "students")
+say DBCount(db, "students")
+
+# Use placeholders for values instead of concatenating user input into SQL.
+say DBSelect(db, "students", ["name", "age"], "age > ?", [12])
+
+DBUpdate(db, "students", {"age": 15}, "name = ?", ["Alex"])
+DBDelete(db, "students", "name = ?", ["Alex"])
+DBCommit(db)
+DBClose(db)
+```
+
+Available functions:
+
+- `DBOpen(path)` — open or create an SQLite database; returns a connection handle.
+- `DBClose(db)` — close a connection.
+- `DBCreateTable(db, table, columns)` — create a table from a dictionary of column names and supported declarations.
+- `DBInsert(db, table, values)` — insert a dictionary of values; returns the new row ID.
+- `DBSelect(db, table, columns, where, params)` — return rows as a list of dictionaries. `columns`, `where`, and `params` are optional.
+- `DBUpdate(db, table, values, where, params)` — update matching rows and return the affected row count.
+- `DBDelete(db, table, where, params)` — delete matching rows and return the affected row count.
+- `DBCount(db, table, where, params)` — count rows, optionally matching a condition.
+- `DBTables(db)` — list user-created tables.
+- `DBCommit(db)` — save the current transaction.
+
+Supported column declarations include `INTEGER`, `REAL`, `TEXT`, `BLOB`, `INTEGER PRIMARY KEY AUTOINCREMENT`, and selected `NOT NULL` / `UNIQUE` forms. Table and column names are validated. Data values use SQLite placeholders (`?`) and separate parameter lists. For safety, `DBUpdate` and `DBDelete` require a non-empty `WHERE` condition. Only put SQL expressions in `where` that are authored by your program; pass external values through `params`.
+
+The native interpreter stores database files on the host filesystem. The browser Playground uses Pyodide's virtual filesystem, so its database files are temporary and may disappear when the page/runtime is reset. Browser SQLite availability is dependent on the Pyodide runtime.
+
+Run the database tests with:
+
+```bash
+python -m unittest tests.test_database -v
+```
+
 ## Local variables
 
 `Local` creates a variable in the current scope. It is visible inside that block and nested blocks, but not after the scope ends. Function parameters are also local.
