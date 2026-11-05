@@ -160,10 +160,10 @@ print(Time())'''
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "tools.rost").write_text(
-                "action triple(n) {\\n return n * 3\\n}\\n", encoding="utf-8"
+                "action triple(n) {\n return n * 3\n}\n", encoding="utf-8"
             )
             main = root / "main.rost"
-            source = 'Module("tools")\\nprint(triple(14))'
+            source = 'Module("tools")\nprint(triple(14))'
             main.write_text(source, encoding="utf-8")
             self.assertEqual(self.run_code(source, str(main)), ["42"])
 
