@@ -1,0 +1,42 @@
+use "libraries/database.rost"
+
+say "=== ROSTLANG DATABASE DEMO ==="
+
+make db = DBOpen("school.db")
+
+DBCreateTable(db, "students", {
+    "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+    "name": "TEXT NOT NULL",
+    "age": "INTEGER"
+})
+
+DBInsert(db, "students", {"name": "Alex", "age": 14})
+DBInsert(db, "students", {"name": "Mira", "age": 15})
+DBInsert(db, "students", {"name": "Tim", "age": 12})
+
+say "All students:"
+say DBSelect(db, "students")
+
+say "Students older than 13:"
+say DBSelect(db, "students", ["name", "age"], "age > ?", [13])
+
+say "Total students:"
+say DBCount(db, "students")
+
+DBUpdate(db, "students", {"age": 16}, "name = ?", ["Mira"])
+
+say "After update:"
+say DBSelect(db, "students")
+
+DBDelete(db, "students", "name = ?", ["Tim"])
+
+say "After delete:"
+say DBSelect(db, "students")
+
+say "Tables:"
+say DBTables(db)
+
+DBCommit(db)
+DBClose(db)
+
+say "=== DATABASE DEMO FINISHED ==="
