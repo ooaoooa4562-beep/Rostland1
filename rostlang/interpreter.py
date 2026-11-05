@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .errors import RostLangError
 from .parser import Parser
+from .database import DatabaseManager
 
 
 class RostObject:
@@ -55,6 +56,7 @@ class RostInterpreter:
         self.depth = 0
         self.loaded_modules = set()
         self.loading_modules = set()
+        self.database = DatabaseManager()
         self.builtins = {
             "random": lambda: random.random(),
             "random_int": lambda a, b: random.randint(int(a), int(b)),
@@ -96,6 +98,16 @@ class RostInterpreter:
             "Second": lambda: self.current_time().second,
             "OS": lambda: platform.system() or "Unknown",
             "Platform": lambda: platform.platform(),
+            "DBOpen": self.database.open,
+            "DBClose": self.database.close,
+            "DBCreateTable": self.database.create_table,
+            "DBInsert": self.database.insert,
+            "DBSelect": self.database.select,
+            "DBUpdate": self.database.update,
+            "DBDelete": self.database.delete,
+            "DBCount": self.database.count,
+            "DBTables": self.database.tables,
+            "DBCommit": self.database.commit,
         }
 
     def run(self, source, filename="<memory>"):
