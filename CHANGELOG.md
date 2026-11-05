@@ -1,5 +1,12 @@
 # Changelog
 
+## Database standard library
+- Added SQLite database support with connection handles, table creation, insert, select, update, delete, count, table listing and transaction commit
+- Added validated table/column identifiers and parameterized data values
+- Added a `libraries/database.rost` module and browser Playground runtime loading
+- Added database CRUD and safety tests
+
+
 ## 0.7.0-alpha
 - Added Lua-style `Local name = value` declarations with nested block and function scopes
 - Added `Module("name")` as a function-style module import command
