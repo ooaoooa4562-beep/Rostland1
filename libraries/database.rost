@@ -1,0 +1,25 @@
+# RostLang Database Library
+# Load with: use "libraries/database.rost"
+#
+# SQLite functions provided by the RostLang runtime:
+# DBOpen(path)                         -> connection handle
+# DBClose(db)                          -> closes a connection
+# DBCreateTable(db, table, columns)    -> creates a table
+# DBInsert(db, table, values)          -> returns inserted row ID
+# DBSelect(db, table, columns, where, params) -> returns list of dictionaries
+# DBUpdate(db, table, values, where, params) -> returns affected row count
+# DBDelete(db, table, where, params)   -> returns affected row count
+# DBCount(db, table, where, params)    -> returns number of rows
+# DBTables(db)                         -> returns table names
+# DBCommit(db)                         -> commits changes
+#
+# Example:
+# make db = DBOpen("school.db")
+# DBCreateTable(db, "students", {"name": "TEXT NOT NULL", "age": "INTEGER"})
+# DBInsert(db, "students", {"name": "Alex", "age": 14})
+# say DBSelect(db, "students")
+# DBCommit(db)
+# DBClose(db)
+#
+# For DBUpdate/DBDelete, a WHERE condition is mandatory.
+# Pass values separately in params, e.g. "age > ?" and [12].
