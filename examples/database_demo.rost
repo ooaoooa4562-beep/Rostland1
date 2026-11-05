@@ -4,11 +4,7 @@ say "=== ROSTLANG DATABASE DEMO ==="
 
 make db = DBOpen("school.db")
 
-DBCreateTable(db, "students", {
-    "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-    "name": "TEXT NOT NULL",
-    "age": "INTEGER"
-})
+DBCreateTable(db, "students", {"id": "INTEGER PRIMARY KEY AUTOINCREMENT", "name": "TEXT NOT NULL", "age": "INTEGER"})
 
 DBInsert(db, "students", {"name": "Alex", "age": 14})
 DBInsert(db, "students", {"name": "Mira", "age": 15})
