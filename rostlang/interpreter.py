@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import math
 import operator
 import random
+import platform
 import re
 import shutil
 from pathlib import Path
@@ -79,6 +80,15 @@ class RostInterpreter:
             "Contains": self.contains_value,
             "StartsWith": lambda value, prefix: str(value).startswith(str(prefix)),
             "EndsWith": lambda value, suffix: str(value).endswith(str(suffix)),
+            "Date": self.current_date,
+            "Year": lambda: self.current_time().year,
+            "Month": lambda: self.current_time().month,
+            "Day": lambda: self.current_time().day,
+            "Hour": lambda: self.current_time().hour,
+            "Minute": lambda: self.current_time().minute,
+            "Second": lambda: self.current_time().second,
+            "OS": lambda: platform.system() or "Unknown",
+            "Platform": lambda: platform.platform(),
         }
 
     def run(self, source, filename="<memory>"):
@@ -497,6 +507,10 @@ class RostInterpreter:
             return value in container
         except TypeError:
             raise RostLangError("Contains() expects a string, list, tuple or dictionary")
+
+    @staticmethod
+    def current_date():
+        return datetime.now().astimezone().date().isoformat()
 
     @staticmethod
     def build_site(html_path, css_path=None, output_dir="site"):
