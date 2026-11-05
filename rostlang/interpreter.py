@@ -80,6 +80,11 @@ class RostInterpreter:
             "Contains": self.contains_value,
             "StartsWith": lambda value, prefix: str(value).startswith(str(prefix)),
             "EndsWith": lambda value, suffix: str(value).endswith(str(suffix)),
+            "CreateFile": self.create_file,
+            "RenameFile": self.rename_file,
+            "CopyFile": self.copy_file,
+            "CreateFolder": self.create_folder,
+            "FileSize": self.file_size,
             "Date": self.current_date,
             "Year": lambda: self.current_time().year,
             "Month": lambda: self.current_time().month,
@@ -539,6 +544,55 @@ class RostInterpreter:
         shutil.copy2(source, destination / "index.html")
         shutil.copy2(css_source, destination / "style.css")
         return str(destination)
+
+    @staticmethod
+    def create_file(path, content=""):
+        target = Path(str(path))
+        if target.exists():
+            raise RostLangError(f"CreateFile(): path already exists: {target}")
+        if not target.parent.exists():
+            raise RostLangError(f"CreateFile(): parent folder does not exist: {target.parent}")
+        target.write_text(str(content), encoding="utf-8")
+        return True
+
+    @staticmethod
+    def rename_file(path, new_path):
+        source, destination = Path(str(path)), Path(str(new_path))
+        if not source.exists() or not source.is_file():
+            raise RostLangError(f"RenameFile(): file not found: {source}")
+        if destination.exists():
+            raise RostLangError(f"RenameFile(): destination already exists: {destination}")
+        if not destination.parent.exists():
+            raise RostLangError(f"RenameFile(): destination folder does not exist: {destination.parent}")
+        source.rename(destination)
+        return True
+
+    @staticmethod
+    def copy_file(path, new_path):
+        source, destination = Path(str(path)), Path(str(new_path))
+        if not source.exists() or not source.is_file():
+            raise RostLangError(f"CopyFile(): file not found: {source}")
+        if destination.exists():
+            raise RostLangError(f"CopyFile(): destination already exists: {destination}")
+        if not destination.parent.exists():
+            raise RostLangError(f"CopyFile(): destination folder does not exist: {destination.parent}")
+        shutil.copy2(source, destination)
+        return True
+
+    @staticmethod
+    def create_folder(path):
+        target = Path(str(path))
+        if target.exists():
+            raise RostLangError(f"CreateFolder(): path already exists: {target}")
+        target.mkdir(parents=True)
+        return True
+
+    @staticmethod
+    def file_size(path):
+        target = Path(str(path))
+        if not target.exists() or not target.is_file():
+            raise RostLangError(f"FileSize(): file not found: {target}")
+        return target.stat().st_size
 
     @staticmethod
     def read_text(path):
