@@ -164,13 +164,17 @@ async function loadRuntime() {
     pyodide = await loadPyodide();
     setStatus("Загрузка интерпретатора RostLang…");
     const base = "https://raw.githubusercontent.com/ooaoooa4562-beep/Rostland1/main/rostlang/";
-    const files = ["__init__.py", "errors.py", "lexer.py", "parser.py", "interpreter.py"];
+    const files = ["__init__.py", "errors.py", "lexer.py", "parser.py", "database.py", "interpreter.py"];
     pyodide.FS.mkdirTree("/home/pyodide/rostlang");
     for (const file of files) {
       const response = await fetch(base + file);
       if (!response.ok) throw new Error("Не удалось загрузить " + file + " (" + response.status + ")");
       pyodide.FS.writeFile("/home/pyodide/rostlang/" + file, await response.text());
     }
+    pyodide.FS.mkdirTree("/home/pyodide/libraries");
+    const databaseLibrary = await fetch("https://raw.githubusercontent.com/ooaoooa4562-beep/Rostland1/main/libraries/database.rost");
+    if (!databaseLibrary.ok) throw new Error("Не удалось загрузить библиотеку database.rost (" + databaseLibrary.status + ")");
+    pyodide.FS.writeFile("/home/pyodide/libraries/database.rost", await databaseLibrary.text());
     pyodide.runPython("import sys; sys.path.insert(0, '/home/pyodide')");
     pyodide.runPython("import builtins; from js import prompt; builtins.input = lambda message='': (prompt(message) or '')");
     setStatus("Готово к запуску", "ready");
