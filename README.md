@@ -120,11 +120,7 @@ Load the standard database module in a `.rost` program:
 use "libraries/database.rost"
 
 make db = DBOpen("school.db")
-DBCreateTable(db, "students", {
-    "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-    "name": "TEXT NOT NULL",
-    "age": "INTEGER"
-})
+DBCreateTable(db, "students", {"id": "INTEGER PRIMARY KEY AUTOINCREMENT", "name": "TEXT NOT NULL", "age": "INTEGER"})
 
 DBInsert(db, "students", {"name": "Alex", "age": 14})
 say DBSelect(db, "students")
