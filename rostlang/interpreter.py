@@ -70,6 +70,15 @@ class RostInterpreter:
             "write_html": self.write_text, "write_css": self.write_text,
             "Time": self.current_time, "time_now": self.current_time,
             "Module": self.module_import,
+            "Upper": lambda value: str(value).upper(),
+            "Lower": lambda value: str(value).lower(),
+            "Trim": lambda value: str(value).strip(),
+            "Replace": lambda value, old, new: str(value).replace(str(old), str(new)),
+            "Split": lambda value, separator=None: str(value).split(separator),
+            "Join": self.join_text,
+            "Contains": self.contains_value,
+            "StartsWith": lambda value, prefix: str(value).startswith(str(prefix)),
+            "EndsWith": lambda value, suffix: str(value).endswith(str(suffix)),
         }
 
     def run(self, source, filename="<memory>"):
@@ -475,6 +484,19 @@ class RostInterpreter:
             self.depth -= 1
             self.scopes.pop()
         return None
+
+    @staticmethod
+    def join_text(items, separator=""):
+        if not isinstance(items, (list, tuple)):
+            raise RostLangError("Join() expects a list or tuple")
+        return str(separator).join(str(item) for item in items)
+
+    @staticmethod
+    def contains_value(container, value):
+        try:
+            return value in container
+        except TypeError:
+            raise RostLangError("Contains() expects a string, list, tuple or dictionary")
 
     @staticmethod
     def build_site(html_path, css_path=None, output_dir="site"):
